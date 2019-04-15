@@ -1,0 +1,113 @@
+#!/bin/sh
+
+# Add repositories
+cat <<-EOF >> /etc/apk/repositories
+	http://dl-cdn.alpinelinux.org/alpine/edge/testing
+	http://dl-cdn.alpinelinux.org/alpine/edge/community
+EOF
+
+# Add basics first
+apk update
+apk upgrade
+apk add \
+	bash \
+	nano \
+	tzdata \
+	curl \
+	ca-certificates \
+	openssl \
+	openssh
+
+# Set up Apache and PHP
+apk add \
+	apache2 \
+	php7-apache2 \
+	php7 \
+	php7-phar \
+	php7-json \
+	php7-iconv \
+	php7-openssl
+
+# Same environment as during runtime
+. /etc/environment
+
+# Add Composer
+curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/
+chmod 755 /usr/local/bin/composer.phar
+chmod 755 /usr/local/bin/composer
+chmod 755 /etc/php7
+
+mkdir -p $APACHE_HOME/.composer
+chown apache:apache $APACHE_HOME/.composer
+
+# Add PHP modules
+apk add \
+	imagemagick \
+	php7-bcmath \
+	php7-bz2 \
+	php7-calendar \
+	php7-ctype \
+	php7-curl \
+	php7-dom \
+	php7-exif \
+	php7-fileinfo \
+	php7-ftp \
+	php7-gd \
+	php7-gettext \
+	php7-gmp \
+	php7-intl \
+	php7-mbstring \
+	php7-mcrypt \
+	php7-mcrypt \
+	php7-mysqli \
+	php7-odbc \
+	php7-pcntl \
+	php7-pdo \
+	php7-pdo_dblib \
+	php7-pdo_mysql \
+	php7-pdo_odbc \
+	php7-pdo_pgsql \
+	php7-pdo_sqlite \
+	php7-pecl-apcu \
+	php7-pecl-igbinary \
+	php7-posix \
+	php7-redis \
+	php7-redis \
+	php7-session \
+	php7-shmop \
+	php7-simplexml \
+	php7-soap \
+	php7-sockets \
+	php7-sodium \
+	php7-sqlite3 \
+	php7-sqlite3 \
+	php7-sysvmsg \
+	php7-sysvsem \
+	php7-sysvshm \
+	php7-tokenizer \
+	php7-wddx \
+	php7-xdebug \
+	php7-xmlreader \
+	php7-xmlrpc \
+	php7-xmlwriter \
+	php7-xsl \
+	php7-zip
+
+# Install TYPO3 using Composer
+COMPOSER_CACHE_DIR=/dev/null /usr/local/bin/composer.phar install -d $TYPO3_ROOT # --no-cache not working
+rm -rf /root/.composer
+touch $TYPO3_DOCROOT/FIRST_INSTALL
+
+# Move document root to $TYPO3_DOCROOT
+sed -i "s#/var/www/localhost/htdocs#$TYPO3_DOCROOT#" /etc/apache2/httpd.conf
+rm -rf $TYPO3_ROOT/htdocs $TYPO3_ROOT/cgi-bin
+
+# Make everything in Apache homedir accessible by Apache
+find $APACHE_HOME -type d -exec chmod 755 {} \;
+chown -R apache:apache $APACHE_HOME
+
+# Prepare entry point
+chmod +x /usr/local/bin/entrypoint
+
+# Clean up
+rm -rf /var/cache/apk/* $0
