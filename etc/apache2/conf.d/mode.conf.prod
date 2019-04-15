@@ -17,8 +17,3 @@ ServerTokens Prod
 # Set to one of:  On | Off | EMail
 #
 ServerSignature Off
-
-<Directory ${TYPO3_DOCROOT}>
-    # Production mode PHP settings
-    php_value expose_php	off
-</Directory>

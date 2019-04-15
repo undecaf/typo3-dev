@@ -26,10 +26,11 @@ case "$MODE" in
 		MODE=prod
 		;;
 esac
+
 ln -sf /etc/apache2/conf.d/mode.conf.${MODE} /etc/apache2/conf.d/mode.conf
+ln -sf /etc/php7/mode.${MODE}.template /etc/php7/conf.d/zz_mode.ini
 
 # php.ini setting overrides
-export
 export | awk -F ' |=' -e 'BEGIN { IGNORECASE = 1 }' -e '$2 ~ /^PHP_/ { gsub("^PHP_", "", $2); gsub(/'"'"'/, "", $3); printf "%s=%s\n", $2, $3; }' > /etc/php7/conf.d/zz_overrides.ini
 if [ -s /etc/php7/conf.d/zz_overrides.ini ]; then
 	echo "Overriding these php.ini settings:"
@@ -37,7 +38,7 @@ if [ -s /etc/php7/conf.d/zz_overrides.ini ]; then
 fi
 
 # Enable/disable XDebug support
-if [ -n "$XDEBUG_ENABLED" -o -n "$xdebug_enabled" ]; then
+if [ -n "$XDEBUG_ENABLED" ]; then
 	ln -sf /etc/php7/xdebug.ini.template /etc/php7/conf.d/xdebug.ini
 	echo "XDebug enabled"
 else
