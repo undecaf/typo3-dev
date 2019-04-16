@@ -5,6 +5,7 @@ COPY etc root usr var /
 RUN /usr/local/bin/build
 
 VOLUME /var/www/localhost/public
+VOLUME /var/www/localhost/var/sqlite
 
 EXPOSE 80 22
 ENTRYPOINT ["/usr/local/bin/entrypoint"]

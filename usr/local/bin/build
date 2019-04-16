@@ -6,7 +6,7 @@ cat <<-EOF >> /etc/apk/repositories
 	http://dl-cdn.alpinelinux.org/alpine/edge/community
 EOF
 
-# Add basics first
+# Install basics
 apk update
 apk upgrade
 apk add \
@@ -15,23 +15,22 @@ apk add \
 	tzdata \
 	curl \
 	ca-certificates \
-	openssl \
-	openssh
+	openssl
 
-# Set up Apache and PHP
+# Install up Apache and PHP
 apk add \
 	apache2 \
-	php7-apache2 \
 	php7 \
+	php7-apache2 \
 	php7-phar \
 	php7-json \
 	php7-iconv \
 	php7-openssl
 
-# Same environment as during runtime
+# Same environment as at runtime
 . /etc/environment
 
-# Add Composer
+# Install Composer
 curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/
 chmod 755 /usr/local/bin/composer.phar
 chmod 755 /usr/local/bin/composer
@@ -40,7 +39,7 @@ chmod 755 /etc/php7
 mkdir -p $APACHE_HOME/.composer
 chown apache:apache $APACHE_HOME/.composer
 
-# Add PHP modules
+# Install PHP modules
 apk add \
 	imagemagick \
 	php7-bcmath \
@@ -58,14 +57,11 @@ apk add \
 	php7-intl \
 	php7-mbstring \
 	php7-mcrypt \
-	php7-mcrypt \
 	php7-mysqli \
-	php7-odbc \
 	php7-pcntl \
 	php7-pdo \
 	php7-pdo_dblib \
 	php7-pdo_mysql \
-	php7-pdo_odbc \
 	php7-pdo_pgsql \
 	php7-pdo_sqlite \
 	php7-pecl-apcu \
