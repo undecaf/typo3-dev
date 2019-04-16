@@ -68,14 +68,12 @@ apk add \
 	php7-pecl-igbinary \
 	php7-posix \
 	php7-redis \
-	php7-redis \
 	php7-session \
 	php7-shmop \
 	php7-simplexml \
 	php7-soap \
 	php7-sockets \
 	php7-sodium \
-	php7-sqlite3 \
 	php7-sqlite3 \
 	php7-sysvmsg \
 	php7-sysvsem \

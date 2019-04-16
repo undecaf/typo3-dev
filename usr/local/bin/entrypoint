@@ -28,13 +28,13 @@ case "$MODE" in
 esac
 
 ln -sf /etc/apache2/conf.d/mode.conf.${MODE} /etc/apache2/conf.d/mode.conf
-ln -sf /etc/php7/mode.${MODE}.template /etc/php7/conf.d/zz_mode.ini
+ln -sf /etc/php7/mode.${MODE}.template /etc/php7/conf.d/zz_50_mode.ini
 
 # php.ini setting overrides
-export | awk -F ' |=' -e 'BEGIN { IGNORECASE = 1 }' -e '$2 ~ /^PHP_/ { gsub("^PHP_", "", $2); gsub(/'"'"'/, "", $3); printf "%s=%s\n", $2, $3; }' > /etc/php7/conf.d/zz_overrides.ini
-if [ -s /etc/php7/conf.d/zz_overrides.ini ]; then
+export | awk -F ' |=' -e 'BEGIN { IGNORECASE = 1 }' -e '$2 ~ /^PHP_/ { gsub("^PHP_", "", $2); gsub(/'"'"'/, "", $3); printf "%s=%s\n", $2, $3; }' > /etc/php7/conf.d/zz_99_overrides.ini
+if [ -s /etc/php7/conf.d/zz_99_overrides.ini ]; then
 	echo "Overriding these php.ini settings:"
-	cat /etc/php7/conf.d/zz_overrides.ini
+	cat /etc/php7/conf.d/zz_99_overrides.ini
 fi
 
 # Enable/disable XDebug support
@@ -45,8 +45,11 @@ else
 	rm -f /etc/php7/conf.d/xdebug.ini
 fi
 
-# Run Apache
-echo "Running Apache"
-rm -f /run/apache2/apache2.pid
-rm -f /run/apache2/httpd.pid
-httpd -D FOREGROUND
+# root created missing paths for volumes also in $APACHE_HOME, therefore:
+chown -R apache:apache $APACHE_HOME 
+
+# Clean for running Apache
+rm -f /run/apache2/apache2.pid /run/apache2/httpd.pid
+
+echo "Executing '$@'"
+$@

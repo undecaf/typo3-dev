@@ -1,6 +1,8 @@
+# Enables XDebug
 zend_extension=xdebug.so
 xdebug.coverage_enable=On
 xdebug.remote_enable=1
 xdebug.remote_connect_back=1
 xdebug.remote_log=/tmp/xdebug.log
 xdebug.remote_autostart=true
+xdebug.max_nesting_level=400
