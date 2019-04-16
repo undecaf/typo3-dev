@@ -1,6 +1,0 @@
-#!/bin/bash -x
-
-podman build \
-	--tag localhost/typo3-composer \
-	$@ \
-	.
