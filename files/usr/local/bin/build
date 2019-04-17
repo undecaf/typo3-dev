@@ -21,10 +21,12 @@ apk add \
 # Resolve COPY incompatibilities between Docker and Podman
 if [ -d /files/files ]; then
     # Podman COPY
-    rsync -aX /files/files/ /
+    chmod 755 /files/files/*
+    rsync -a /files/files/ /
 else
     # Docker COPY 
-    rsync -aX /files/ /
+    chmod 755 /files/*
+    rsync -a /files/ /
 fi
 
 rm -rf /files
