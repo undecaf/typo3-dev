@@ -8,8 +8,9 @@ Provides a containerized TYPO3 installation equivalent to
 The image is based on [Alpine Linux](https://alpinelinux.org/), Apache and
 PHP&nbsp;7 and is quite compact (280&nbsp;MB).
 
-It can be linked to a MySQL or a PostgreSQL container and can be run even as a
-standalone container using the built-in SQLite database.
+It can be linked to a
+[MySQL or a PostgreSQL container](#reliable-mariadb-and-postgresql)
+but can be run also independenty owing to the built-in SQLite database.
 
 # Building
 
@@ -17,7 +18,9 @@ In order to build the image with [Docker](https://www.docker.com/) and name it
 `localhost/typo3-composer`:
 
 ```bash
-docker build --tag typo3-composer git://github.com/undecaf/typo3-composer
+docker build \
+    --tag localhost/typo3-composer \
+    git://github.com/undecaf/typo3-composer
 ```
 
 If you prefer working rootless with [Podman](https://podman.io/) then substitute `podman` in all `docker` commands (unless you have set `alias docker=podman`).
@@ -25,21 +28,24 @@ If you prefer working rootless with [Podman](https://podman.io/) then substitute
 
 # Running
 
-## Quick & dirty
+## TL;DR (quick & dirty)
 
-This creates a TYPO3 instance in a standalone container, maintaining database
-and website state in volumes `sqlite-vol` and `typo3-vol`:
+For a TYPO3 instance in a standalone container, do this:
 ```bash
 docker run -d \
+    --rm \
     -v sqlite-vol:/var/www/localhost/var/sqlite \
     -v typo3-vol:/var/www/localhost/public \
     -p 127.0.0.1:8080:80 \
-    typo3-composer
+    localhost/typo3-composer
 ```
 
-Browsing to `http://localhost:8080` starts the TYPO3 installation wizard. 
+Next, browse to `http://localhost:8080`. This starts the TYPO3 installation wizard. 
 When asked to select a database, choose `Manually configured SQLite connection` and
 continue through the remaining dialogs to the TYPO3 login dialog.
+
+Volumes `sqlite-vol` and `typo3-vol` preserve SQLite and TYPO3 state across
+container instances.
 
 ### Volume structure
 
@@ -51,15 +57,15 @@ continue through the remaining dialogs to the TYPO3 login dialog.
 ## Reliable: MariaDB and PostgreSQL
 
 The following examples show how to employ MariaDB
-([`bitnami/mariadb`](https://hub.docker.com/r/bitnami/mariadb)) as the TYPO3
-database. PostgreSQL ([`bitnami/postgresql`](https://hub.docker.com/r/bitnami/postgresql)) configuration is not shown here as it is quite similar.
+([`bitnami/mariadb`](https://hub.docker.com/r/bitnami/mariadb)) as TYPO3
+database. Using PostgreSQL ([`bitnami/postgresql`](https://hub.docker.com/r/bitnami/postgresql)) is quite similar and is not shown here.
 
-Starting database and TYPO3 containers separately but with a common network
+Start database and TYPO3 containers separately but with a common network
 stack: `127.0.0.1` is shared _within_ containers but is separate from the host's
 `127.0.0.1`.
 
 ```bash
-# Start MariaDB container, must expose TYPO3 port now for later
+# Start MariaDB container, must expose TYPO3 port _now_ for later
 podman run -d \
     --name mariadb \
     -e MARIADB_DATABASE=t3 -e MARIADB_USER=t3 \
@@ -71,9 +77,10 @@ podman run -d \
 
 # Start TYPO3 container, join MariaDB network namespace
 podman run -d \
+    --rm \
     -v typo3-vol:/var/www/localhost/public \
     --net container:mariadb \
-    typo3-composer
+    localhost/typo3-composer
 ```
 
 
@@ -105,19 +112,20 @@ defaults to `localhost`.
 
 ## Shell access and `composer`
 
-This opens a `root` shell in a running container:
+Shell access is required for managing the TYPO3 installation with
+[Composer](https://wiki.typo3.org/Composer). To open a `root` shell
+in a running container:
 ```bash
 docker exec -it <container-id> bash
 ```
-You can also run the container with a `root` shell that is open from the beginning.
+
+You may also run the container with a `root` shell that is open from the beginning.
 In this case you have to start Apache yourself (command `httpd`):
 ```bash
-docker run <args described above> -it typo3-composer bash
+docker run <args as described above> -it typo3-composer bash
 ```
 
-Shell access is required for managing the TYPO3 installation with
-[Composer](https://wiki.typo3.org/Composer).
-The `composer` command has been customized for this use case, in particular:
+The `composer` command has been customized for TYPO3 packages:
 -   `composer` always uses `/var/www/localhost` as working directory
     (i.e. the location of `composer.json` for TYPO3), 
     even if the command is run in a different directory.
