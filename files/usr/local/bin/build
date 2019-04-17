@@ -12,10 +12,23 @@ apk upgrade
 apk add \
 	bash \
 	nano \
+    rsync \
 	tzdata \
 	curl \
 	ca-certificates \
 	openssl
+
+# Resolve COPY incompatibilities between Docker and Podman
+if [ -d /files/files ]; then
+    # Podman COPY
+    rsync -aX /files/files/ /
+else
+    # Docker COPY 
+    rsync -aX /files/ /
+fi
+
+rm -rf /files
+apk del rsync
 
 # Install up Apache and PHP
 apk add \
