@@ -16,18 +16,19 @@ mapped between host and container.
 # Building
 
 In order to build the image with [Docker](https://www.docker.com/) and name it
-`localhost/typo3-developing`:
+`localhost/typo3-dev`:
 
 ```bash
 $ docker build \
-    --tag localhost/typo3-developing \
-    git://github.com/undecaf/typo3-developing
+    --tag localhost/typo3-dev \
+    git://github.com/undecaf/typo3-dev
 ```
 
 The resulting image is based on [Alpine Linux](https://alpinelinux.org/), Apache and
 PHP&nbsp;7 and is quite compact (280&nbsp;MB).
 
-If you prefer [working rootless](https://de.slideshare.net/AkihiroSuda/rootless-containers)
+If you prefer
+[working rootless](https://de.slideshare.net/AkihiroSuda/rootless-containers)
 with [Podman](https://podman.io/) then substitute `podman` for `docker` 
 where applicable, or simply set `alias docker=podman`.
 
@@ -44,7 +45,7 @@ $ docker run -d \
     -v sqlite-vol:/var/www/localhost/var/sqlite \
     -v typo3-vol:/var/www/localhost/public \
     -p 127.0.0.1:8080:80 \
-    localhost/typo3-developing
+    localhost/typo3-dev
 ```
 
 Next, browse to `http://localhost:8080`. This starts the TYPO3 installation wizard. 
@@ -93,9 +94,8 @@ $ podman run -d \
     --hostname dev.typo3.local \
     -v typo3-vol:/var/www/localhost/public \
     --net container:mariadb \
-    localhost/typo3-developing
+    localhost/typo3-dev
 ```
-
 ## Runtime configuration
 
 #### `--hostname`
@@ -221,7 +221,7 @@ $ sudo umount $T3_DEV_DOCROOT
 
 # Licenses
 
-Scripts in this repository are licensed under the GPL 3.0.
-This document is licensed under the Creative Commons license CC BY-SA 3.0.
+Scripts in this repository are licensed under the GPL&nbsp;3.0.
+This document is licensed under the Creative Commons license CC&nbsp;BY-SA&nbsp;3.0.
 For licenses regarding container images, please refer to 
 [this discussion](https://opensource.stackexchange.com/questions/7013/license-for-docker-images#answer-7015).
