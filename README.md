@@ -16,12 +16,12 @@ mapped between host and container.
 # Building
 
 In order to build the image with [Docker](https://www.docker.com/) and name it
-`localhost/typo3-composer`:
+`localhost/typo3-developing`:
 
 ```bash
 $ docker build \
-    --tag localhost/typo3-composer \
-    git://github.com/undecaf/typo3-composer
+    --tag localhost/typo3-developing \
+    git://github.com/undecaf/typo3-developing
 ```
 
 The resulting image is based on [Alpine Linux](https://alpinelinux.org/), Apache and
@@ -44,7 +44,7 @@ $ docker run -d \
     -v sqlite-vol:/var/www/localhost/var/sqlite \
     -v typo3-vol:/var/www/localhost/public \
     -p 127.0.0.1:8080:80 \
-    localhost/typo3-composer
+    localhost/typo3-developing
 ```
 
 Next, browse to `http://localhost:8080`. This starts the TYPO3 installation wizard. 
@@ -93,7 +93,7 @@ $ podman run -d \
     --hostname dev.typo3.local \
     -v typo3-vol:/var/www/localhost/public \
     --net container:mariadb \
-    localhost/typo3-composer
+    localhost/typo3-developing
 ```
 
 ## Runtime configuration
