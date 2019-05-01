@@ -1,4 +1,4 @@
-# Developing for TYPO3 with Docker and Podman
+# Developing for TYPO3 with Docker or Podman
 
 Provides a containerized TYPO3 installation equivalent to
 [`composer require typo3/cms`](https://packagist.org/packages/typo3/cms) with
@@ -39,12 +39,13 @@ where applicable, or simply set `alias docker=podman`.
 
 For a TYPO3 instance in a standalone container, do this:
 ```bash
-$ docker run -d \
+$ docker run \
+    --detach \
     --rm \
     --hostname dev.typo3.local \
-    -v sqlite-vol:/var/www/localhost/var/sqlite \
-    -v typo3-vol:/var/www/localhost/public \
-    -p 127.0.0.1:8080:80 \
+    --volume sqlite-vol:/var/www/localhost/var/sqlite \
+    --volume typo3-vol:/var/www/localhost/public \
+    --publish 127.0.0.1:8080:80 \
     localhost/typo3-dev
 ```
 
@@ -54,13 +55,6 @@ continue through the remaining dialogs to the TYPO3 login dialog.
 
 Volumes `sqlite-vol` and `typo3-vol` preserve SQLite and TYPO3 state across
 container instances.
-
-### Volume structure
-
--   `/var/www/localhost/public`: TYPO3 document root. Note that
-    `composer.json` is located in the parent directory and can be accessed only [through a shell](#shell-access-and-composer).
--   `/var/www/localhost/var/sqlite`: contains the TYPO3 SQLite database, not used
-    for MariaDB and PostgreSQL.
 
 ## Using MariaDB or PostgreSQL
 
@@ -79,23 +73,83 @@ stack: `127.0.0.1` is shared _between_ containers but is separate from the host'
 
 ```bash
 # Starts the MariaDB container, must expose HTTP port _now_ for later
-$ podman run -d \
+$ podman run \
+    --detach \
     --name mariadb \
-    -e MARIADB_DATABASE=t3 -e MARIADB_USER=t3 \
-    -e MARIADB_PASSWORD=t3 -e MARIADB_ROOT_PASSWORD=toor \
-    -v mariadb-vol:/bitnami/mariadb \
-    -p 127.0.0.1:3306:3306 \
-    -p 127.0.0.1:8080:80 \
+    --env MARIADB_DATABASE=t3 \
+    --env MARIADB_USER=t3 \
+    --env MARIADB_PASSWORD=t3 \
+    --env MARIADB_ROOT_PASSWORD=toor \
+    --volume mariadb-vol:/bitnami/mariadb \
+    --publish 127.0.0.1:3306:3306 \
+    --publish 127.0.0.1:8080:80 \
     bitnami/mariadb
 
 # Starts the TYPO3 container and joins the MariaDB network namespace
-$ podman run -d \
+$ podman run \
+    --detach \
     --rm \
     --hostname dev.typo3.local \
-    -v typo3-vol:/var/www/localhost/public \
+    --volume typo3-vol:/var/www/localhost/public \
     --net container:mariadb \
     localhost/typo3-dev
 ```
+
+### Podman pod
+
+Podman can group the TYPO3 and the database container in a pod which then can be
+managed as a unit:
+
+```bash
+# Creates the pod and defines the exposed ports
+$ podman pod create \
+    --name typo3-mariadb \
+    --publish 127.0.0.1:3306:3306 \
+    --publish 127.0.0.1:8080:80 \
+    --share net
+
+# Starts the MariaDB container in the pod
+$ podman run \
+    --detach \
+    --pod typo3-mariadb \
+    --name mariadb \
+    --env MARIADB_DATABASE=t3 \
+    --env MARIADB_USER=t3 \
+    --env MARIADB_PASSWORD=t3 \
+    --env MARIADB_ROOT_PASSWORD=toor \
+    --volume mariadb-vol:/bitnami/mariadb \
+    bitnami/mariadb
+
+# Starts the TYPO3 container in the pod
+podman run \
+    --detach \
+    --pod typo3-mariadb \
+    --hostname dev.typo3.local \
+    --volume typo3-vol:/var/www/localhost/public \
+    localhost/typo3-dev
+```
+
+The pod can be stopped and restarted as a unit:
+```bash
+# Stops the pod
+$ podman pod stop typo3-mariadb
+
+# Restarts the pod
+$ podman pod restart typo3-mariadb
+```
+
+## Volumes
+
+Volumes can be attached to the following container paths for persisting
+the container state: 
+
+-   `/var/www/localhost/public`: TYPO3 document root. Note that
+    `composer.json` is located in the parent directory and can be accessed only [through a container shell](#shell-access-and-composer).
+-   `/var/www/localhost/var/sqlite`: contains the TYPO3 SQLite database, otherwise
+    empty.
+-   `/bitnami/mariadb`: contains the MariaDB database, otherwise not available.
+-   `/bitnami/postgresql`: contains the PostgreSQL database, otherwise not available.
+
 ## Runtime configuration
 
 #### `--hostname`
