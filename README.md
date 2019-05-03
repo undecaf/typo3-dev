@@ -19,16 +19,19 @@ mapped between host and container.
 -   [Running TYPO3](#running-typo3)
     -   [TL;DR (quick & dirty)](#tldr-quick--dirty)
     -   [Using MariaDB or PostgreSQL](#using-mariadb-or-postgresql)
+        -   [Docker Compose](#docker-compose)
         -   [Podman](#podman)
         -   [Podman pod](#podman-pod)
     -   [Volumes](#volumes)
     -   [Runtime configuration](#runtime-configuration)
--   [Developing](developing)
+-   [Developing](#developing)
     -   [Shell access and `composer`](#shell-access-and-composer)
     -   [Using your favorite IDE](#using-your-favorite-ide)
         -   [Preparation](#preparation)
         -   [Developing](#developing-1)
+        -   [Debugging](#debugging)
         -   [Cleaning up](#cleaning-up)
+    -   [Accessing the TYPO3 database](#accessing-the-typo3-database)
 -   [Licenses](#licenses)
 
 ## Building the image
@@ -71,8 +74,9 @@ Next, browse to `http://localhost:8080`. This starts the TYPO3 installation wiza
 When asked to select a database, choose `Manually configured SQLite connection` and
 continue through the remaining dialogs to the TYPO3 login dialog.
 
-Volumes `sqlite-vol` and `typo3-vol` preserve SQLite and TYPO3 state across
-container instances.
+[Volumes](#volumes) `sqlite-vol` and `typo3-vol` provide
+convenient host access to the SQLite database and to the TYPO3
+installation.
 
 ### Using MariaDB or PostgreSQL
 
@@ -82,6 +86,10 @@ database.
 Working with PostgreSQL ([`bitnami/postgresql`](https://hub.docker.com/r/bitnami/postgresql)) is very similar&nbsp;&ndash; please refer to the 
 [documentation on Docker Hub](https://hub.docker.com/r/bitnami/postgresql#creating-a-database-on-first-run)
 for a quick start.
+
+#### Docker Compose
+
+TODO: docker-compose file
 
 #### Podman
 
@@ -121,7 +129,7 @@ managed as a unit:
 ```bash
 ## Creates the pod and defines the exposed ports
 $ podman pod create \
-    --name typo3-mariadb \
+    --name typo3-pod \
     --publish 127.0.0.1:3306:3306 \
     --publish 127.0.0.1:8080:80 \
     --share net
@@ -129,8 +137,8 @@ $ podman pod create \
 ## Starts the MariaDB container in the pod
 $ podman run \
     --detach \
-    --pod typo3-mariadb \
     --name mariadb \
+    --pod typo3-pod \
     --env MARIADB_DATABASE=t3 \
     --env MARIADB_USER=t3 \
     --env MARIADB_PASSWORD=t3 \
@@ -141,7 +149,8 @@ $ podman run \
 ## Starts the TYPO3 container in the pod
 podman run \
     --detach \
-    --pod typo3-mariadb \
+    --name typo3 \
+    --pod typo3-pod \
     --hostname dev.typo3.local \
     --volume typo3-vol:/var/www/localhost/public \
     localhost/typo3-dev
@@ -150,16 +159,16 @@ podman run \
 The pod can be stopped and restarted as a unit:
 ```bash
 ## Stops the pod
-$ podman pod stop typo3-mariadb
+$ podman pod stop typo3-pod
 
-## Restarts the pod
-$ podman pod restart typo3-mariadb
+## (Re-)Starts the pod
+$ podman pod start typo3-pod
 ```
 
 ### Volumes
 
-Volumes can be attached to the following container paths for persisting
-the container state: 
+Volumes can be attached to the following container paths for
+convenient host access to the container state: 
 
 -   `/var/www/localhost/public`: TYPO3 document root. Note that
     `composer.json` is located in the parent directory and can be accessed only [through a container shell](#shell-access-and-composer).
@@ -176,7 +185,12 @@ Determines both the container hostname and the Apache `ServerName` and `ServerAd
 If `--hostname` is omitted then the container gets a random hostname, and `ServerName` 
 defaults to `localhost`.
 
-##### `--env` variables recognized at runtime
+##### Environment variables
+
+May be set not only as `--env` variables in `docker run` but can also be changed afterwards in a _running_ container like so:
+```bash
+$ docker exec <container-id> setenv var=value ...
+```
 
 -   `TIMEZONE`: sets the container timezone (e.g. `Europe/Vienna`), defaults to UTC.
 
@@ -184,12 +198,11 @@ defaults to `localhost`.
     -   `dev` selects development mode, i.e. TYPO3 in „Development Mode“, 
         verbose Apache/PHP signature headers, PHP settings as recommended by
         [`php.ini-development`](https://github.com/php/php-src/blob/master/php.ini-development)
+    -   `xdebug` selects development mode as above and enables 
+        [XDebug](https://xdebug.org/)
     -   `prod` selects production mode: TYPO3 in „Production Mode“, no Apache/PHP
         signature headers, PHP settings as per
         [`php.ini-production`](https://github.com/php/php-src/blob/master/php.ini-production)
-
--   `XDEBUG_ENABLED`: enables [XDebug](https://xdebug.org/) if set to anything
-    non-empty. Not recommended for production mode.
 
 -   `PHP_...`: environment variables prefixed with `PHP_` or `php_` become `php.ini`
     settings with the prefix removed, e.g. `--env php_post_max_size=5M` becomes 
@@ -284,12 +297,20 @@ $ code $T3_DEV_DOCROOT/..
 Any changes
 you make in your IDE will be propagated to the running container automagically.
 
+#### Debugging
+
+TODO
+
 #### Cleaning up
 
 To clean up afterwards:
 ```bash
 $ sudo umount $T3_DEV_DOCROOT
 ```
+
+### Accessing the TYPO3 database
+
+TODO
 
 ## Podman pods
 

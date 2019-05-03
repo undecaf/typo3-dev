@@ -9,16 +9,24 @@ if [ -n "$TIMEZONE" -a -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
 	echo "Timezone: $TIMEZONE"
 fi
 
-# Set up developer/production mode
+# Set up developer/XDebug/production mode
 case "$MODE" in
 	dev|DEV)
 		echo "Developer mode"
 		MODE=dev
+        XDEBUG=
+		;;
+
+    xdebug|XDEBUG)
+		echo "Developer mode with XDebug"
+		MODE=dev
+        XDEBUG=y
 		;;
 
 	prod|PROD|'')
 		echo "Production mode"
 		MODE=prod
+        XDEBUG=
 		;;
 
 	*)
@@ -38,18 +46,20 @@ if [ -s /etc/php7/conf.d/zz_99_overrides.ini ]; then
 fi
 
 # Enable/disable XDebug support
-if [ -n "$XDEBUG_ENABLED" ]; then
+if [ -n "$XDEBUG" ]; then
 	ln -sf /etc/php7/xdebug.ini.template /etc/php7/conf.d/xdebug.ini
 	echo "XDebug enabled"
 else
 	rm -f /etc/php7/conf.d/xdebug.ini
+	echo "XDebug disabled"
 fi
 
 # root created missing paths for volumes also in $APACHE_HOME, therefore:
 chown -R apache:apache $APACHE_HOME 
 
-# Clean for running Apache
-rm -f /run/apache2/apache2.pid /run/apache2/httpd.pid
+# Clean up Apache PID files only if this is the initial process
+[ $$ -eq 1 ] && rm -f /run/apache2/apache2.pid /run/apache2/httpd.pid
 
-echo "Executing '$@'"
+# Execute Dockerfile CMD or command line
+echo "Executing '$@', PID = $$"
 $@

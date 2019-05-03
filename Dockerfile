@@ -9,5 +9,5 @@ VOLUME /var/www/localhost/var/sqlite
 
 EXPOSE 80
 
-ENTRYPOINT ["/usr/local/bin/entrypoint"]
-CMD ["httpd", "-DFOREGROUND"]
+ENTRYPOINT ["/usr/local/bin/init"]
+CMD ["httpd", "-D", "FOREGROUND"]

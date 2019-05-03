@@ -17,7 +17,7 @@ apk add \
 	ca-certificates \
 	openssl
 
-# Install up Apache and PHP
+# Install Apache and PHP
 apk add \
 	apache2 \
 	php7 \
@@ -88,7 +88,7 @@ apk add \
 	php7-zip
 
 # Install TYPO3 using Composer
-COMPOSER_CACHE_DIR=/dev/null /usr/local/bin/composer.phar install -d $TYPO3_ROOT # --no-cache not working
+COMPOSER_CACHE_DIR=/dev/null /usr/local/bin/composer.phar install -d $TYPO3_ROOT # --no-cache is not working
 rm -rf /root/.composer
 touch $TYPO3_DOCROOT/FIRST_INSTALL
 
@@ -98,10 +98,10 @@ rm -rf $TYPO3_ROOT/htdocs $TYPO3_ROOT/cgi-bin
 
 # Make everything in Apache homedir accessible by Apache
 find $APACHE_HOME -type d -exec chmod 755 {} \;
-chown -R apache:apache $APACHE_HOME
+chown -R apache. $APACHE_HOME
 
 # Prepare entry point
-chmod +x /usr/local/bin/entrypoint
+chmod +x /usr/local/bin/init /usr/local/bin/setenv
 
 # Clean up
 rm -rf /var/cache/apk/* $0
