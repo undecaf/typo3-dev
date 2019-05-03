@@ -312,59 +312,6 @@ $ sudo umount $T3_DEV_DOCROOT
 
 TODO
 
-## Podman pods
-
-To use this image directly, you can use a docker-compose file to keep things nice and simple... if you have a load balancer like traefik and mysql containers running on another docker network, you may have something like this...
-
-
-```yml
-version: "2"
-services:
-  myservice:
-    build: ./
-    labels:
-      - "traefik.backend=myservice"
-      - "traefik.frontend.rule=Host:myservice.docker.localhost"
-    environment:
-      - MYSQL_HOST=mysql
-      - APACHE_SERVER_NAME=myservice.docker.localhost
-      - PHP_SHORT_OPEN_TAG=On
-      - PHP_ERROR_REPORTING=E_ALL
-      - PHP_DISPLAY_ERRORS=On
-      - PHP_HTML_ERRORS=On
-      - PHP_XDEBUG_ENABLED=true
-    networks:
-      - default
-    volumes:
-      - ./:/app
-  # ADD in permission for setting system time to host system time
-    cap_add:
-      - SYS_TIME
-      - SYS_NICE
-networks:
-  default:
-    external:
-      name: docker_docker-localhost
-```
-
-Then run...
-
-```bash
-docker-compose up -d
-```
-
-This will patch the container through to traefik load balancer running from another dc file.
-
-If you would like to add to this, expand on this, maybe you don't want to map your volume and want to copy files for a production system. You can create your own Dockerfile based on this image...
-
-```bash
-FROM ulsmith/alpine-apache-php7
-MAINTAINER You <you@youremail.com>
-
-ADD /public /app/public
-RUN chown -R apache:apache /app
-```
-
 ## Licenses
 
 Scripts in this repository are licensed under the GPL&nbsp;3.0.
