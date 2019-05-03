@@ -1,6 +1,6 @@
 # Developing for TYPO3 with Docker or Podman
 
-Provides a containerized TYPO3 installation equivalent to
+This project provides a containerized TYPO3 installation equivalent to
 [`composer require typo3/cms`](https://packagist.org/packages/typo3/cms) with
 [ImageMagick](https://www.imagemagick.org/) and configured for
 [Composer Mode](https://wiki.typo3.org/Composer#Composer_Mode).
@@ -12,6 +12,8 @@ but can be run also independenty owing to the built-in SQLite database.
 You may use your favorite IDE on the host to work on TYPO3 in the container.
 File access rights, ownerships, UIDs and GIDs are transparently and consistently
 mapped between host and container.
+
+`composer` and PHP do not need to be installed on the host.
 
 ## Contents
 
@@ -29,7 +31,8 @@ mapped between host and container.
     -   [Using your favorite IDE](#using-your-favorite-ide)
         -   [Preparation](#preparation)
         -   [Developing](#developing-1)
-        -   [Debugging](#debugging)
+        -   [Changing the runtime environment](#changing-the-runtime-environment)
+        -   [Debugging with XDebug](#debugging-with-xdebug)
         -   [Cleaning up](#cleaning-up)
     -   [Accessing the TYPO3 database](#accessing-the-typo3-database)
 -   [Licenses](#licenses)
@@ -181,16 +184,12 @@ convenient host access to the container state:
 
 ##### `--hostname`
 
-Determines both the container hostname and the Apache `ServerName` and `ServerAdmin`.
-If `--hostname` is omitted then the container gets a random hostname, and `ServerName` 
+Determines both the container hostname and the Apache
+`ServerName` and `ServerAdmin`. If `--hostname` is omitted
+then the container gets a random hostname, and `ServerName`
 defaults to `localhost`.
 
-##### Environment variables
-
-May be set not only as `--env` variables in `docker run` but can also be changed afterwards in a _running_ container like so:
-```bash
-$ docker exec <container-id> setenv var=value ...
-```
+##### `--env` variables
 
 -   `TIMEZONE`: sets the container timezone (e.g. `Europe/Vienna`), defaults to UTC.
 
@@ -297,7 +296,18 @@ $ code $T3_DEV_DOCROOT/..
 Any changes
 you make in your IDE will be propagated to the running container automagically.
 
-#### Debugging
+#### Changing the runtime environment
+
+[`--env` variables](#--env-variables) can be changed also in a 
+_running_ container, e.g. in order to switch `MODE` or to
+experiment with `php.ini` settings, e.g.
+```bash
+$ docker exec <container-id> setenv MODE=xdebug
+```
+The original `--env` settings are restored whenever the
+container is restarted.
+
+#### Debugging with XDebug
 
 TODO
 
