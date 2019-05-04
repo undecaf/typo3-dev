@@ -1,2 +1,2 @@
 #!/bin/sh
-su apache -s /bin/sh -c ". /etc/environment; /usr/local/bin/composer.phar --working-dir=\$TYPO3_ROOT $*"
+su apache -s /bin/sh -l -c ". /etc/environment; /usr/local/bin/composer.phar --working-dir=\$TYPO3_ROOT $*"

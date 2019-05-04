@@ -32,12 +32,11 @@ apk add \
 
 # Install Composer
 curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/
-chmod 755 /usr/local/bin/composer.phar
-chmod 755 /usr/local/bin/composer
+chmod 755 /usr/local/bin/*
 chmod 755 /etc/php7
 
 mkdir -p $APACHE_HOME/.composer
-chown apache:apache $APACHE_HOME/.composer
+chown ${APACHE_USER}. $APACHE_HOME/.composer
 
 # Install PHP modules
 apk add \
@@ -89,9 +88,10 @@ apk add \
 	php7-zip
 
 # Install TYPO3 using Composer
-COMPOSER_CACHE_DIR=/dev/null /usr/local/bin/composer.phar install -d $TYPO3_ROOT # --no-cache is not working
-rm -rf /root/.composer
+chown -R ${APACHE_USER}. $APACHE_HOME
+composer install
 touch $TYPO3_DOCROOT/FIRST_INSTALL
+chown ${APACHE_USER}. $TYPO3_DOCROOT/FIRST_INSTALL
 
 # Move document root to $TYPO3_DOCROOT
 sed -i "s#/var/www/localhost/htdocs#$TYPO3_DOCROOT#" /etc/apache2/httpd.conf
@@ -99,10 +99,10 @@ rm -rf $TYPO3_ROOT/htdocs $TYPO3_ROOT/cgi-bin
 
 # Make everything in Apache homedir accessible by Apache
 find $APACHE_HOME -type d -exec chmod 755 {} \;
-chown -R apache. $APACHE_HOME
+chown -R ${APACHE_USER}. $APACHE_HOME
 
-# Prepare entry point
-chmod +x /usr/local/bin/init /usr/local/bin/setenv
+# Make executables executable
+chmod 755 /usr/local/bin/*
 
 # Clean up
-rm -rf /var/cache/apk/* $0
+rm -rf $APACHE_HOME/.composer /var/cache/apk/* $0
