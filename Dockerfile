@@ -1,4 +1,4 @@
-FROM alpine
+FROM alpine:3.9
 LABEL maintainer="Ferdinand Kasper <fkasper@modus-operandi.at>"
 
 COPY files /
