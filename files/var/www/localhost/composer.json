@@ -1,5 +1,5 @@
 {
-	"name": "typo3-container/composer",
+	"name": "undecaf/typo3-dev",
 	"description" : "Containerized TYPO3 9.5 in Composer mode",
 	"license": "GPL-2.0+",
 	"require": {
