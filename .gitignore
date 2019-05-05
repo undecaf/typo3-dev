@@ -1,5 +1,5 @@
 .vscode
 /todo*
-/run*
-/pod*
+/run-*
+/pod-*
 /build*
