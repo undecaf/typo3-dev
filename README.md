@@ -18,12 +18,6 @@ mapped between host and container. PHP and Composer do not need to be installed
 on the host.
 
 
-If you prefer
-[working rootless](https://de.slideshare.net/AkihiroSuda/rootless-containers)
-with [Podman](https://podman.io/) then substitute `podman` for `docker` 
-where applicable, or simply set `alias docker=podman`.
-
-
 ## Contents
 
 -   [Running TYPO3](#running-typo3)
@@ -68,8 +62,8 @@ $ docker run \
 
 If you prefer
 [working rootless](https://de.slideshare.net/AkihiroSuda/rootless-containers)
-with [Podman](https://podman.io/) then substitute `podman` for `docker` where
-applicable, or simply set `alias docker=podman`.
+with [Podman](https://podman.io/) then substitute `podman` for `docker`,
+or simply set `alias docker=podman`.
 
 Next, browse to `http://localhost:8080`. This starts the TYPO3 installation wizard. 
 When asked to select a database, choose `Manually configured SQLite connection` and
@@ -98,7 +92,7 @@ $ docker-compose -f docker-compose-typo3-mariadb.yml up -d
 ```
 
 For PostgreSQL, use
-[`docker-compose-typo3-postgresql.yml`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-compose-typo3-postgresql.yml).
+[`docker-compose-typo3-postgresql.yml`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-compose-typo3-postgresql.yml) instead.
 
 
 #### Podman
@@ -117,7 +111,7 @@ at the host.
 [`podman-pod-typo3-postgresql.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/podman-pod-typo3-postgresql.sh)
 create a
 [pod](https://developers.redhat.com/blog/2019/01/15/podman-managing-containers-pods/)
-named `typo3-pod` which contains the TYPO3 and the database container.
+named `typo3-pod` which contains the TYPO3 and the database containers.
 This pod can be managed as a unit:
 
 ```bash
@@ -156,7 +150,7 @@ they are not reachable from the outside:
 ### Database credentials
 
 The database name, the database username and the password are all set to `t3`.
-It is up to you to improve security here...
+And yes, security could be improved here...
 
 
 ### TYPO3 runtime configuration
@@ -218,8 +212,7 @@ The TYPO3 installation is accessible outside of the
 container at the mount point of `typo3-vol`. However, the container's UIDs and GIDs
 are different from your own ones.
 
-<details>
-<summary>View container UIDs and GIDs using Docker</summary>
+##### View container UIDs and GIDs using Docker
 
 ```bash
 $ sudo ls -nA $(sudo docker volume inspect --format '{{.Mountpoint}}' typo3-vol)
@@ -230,10 +223,8 @@ drwxr-xr-x  6 100 101   4096 Mai  3 22:58 public
 drwxrwsr-x  7 100 101   4096 Mai  3 23:02 var
 drwxr-xr-x 15 100 101   4096 Mai  3 23:01 vendor
 ```
-</details>
 
-<details>
-<summary>View container UIDs and GIDs using Podman (rootless)</summary>
+##### View container UIDs and GIDs using Podman (rootless)
 
 ```bash
 $ ls -nA $(podman volume inspect --format '{{.MountPoint}}' typo3-vol)
@@ -244,7 +235,6 @@ drwxr-xr-x  6 100099 100100   4096 Mai  3 22:58 public
 drwxrwsr-x  7 100099 100100   4096 Mai  3 23:02 var
 drwxr-xr-x 15 100099 100100   4096 Mai  3 23:01 vendor
 ```
-</details>
 
 
 #### Preparation
@@ -310,7 +300,7 @@ you make in your IDE will be propagated to the running container automagically.
 
 #### Changing the runtime environment
 
-[`--env` variables](#--env-variables) can be altered while the container
+[`--env` settings](#--env--environment-settings) can be altered while the container
 is running, e.g. in order to switch `MODE` or to experiment with different
 `php.ini` settings:
 
