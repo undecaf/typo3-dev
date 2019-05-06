@@ -212,7 +212,7 @@ The TYPO3 installation is accessible outside of the
 container at the mount point of `typo3-vol`. However, the container's UIDs and GIDs
 are different from your own ones.
 
-##### View container UIDs and GIDs using Docker
+To view Docker container UIDs and GIDs:
 
 ```bash
 $ sudo ls -nA $(sudo docker volume inspect --format '{{.Mountpoint}}' typo3-vol)
@@ -224,7 +224,7 @@ drwxrwsr-x  7 100 101   4096 Mai  3 23:02 var
 drwxr-xr-x 15 100 101   4096 Mai  3 23:01 vendor
 ```
 
-##### View container UIDs and GIDs using Podman (rootless)
+To view Podman container UIDs and GIDs (rootless):
 
 ```bash
 $ ls -nA $(podman volume inspect --format '{{.MountPoint}}' typo3-vol)
@@ -240,45 +240,28 @@ drwxr-xr-x 15 100099 100100   4096 Mai  3 23:01 vendor
 #### Preparation
 
 [bindfs](https://bindfs.org/) (available for Debian-like and MacOS hosts)
-is a [FUSE](https://github.com/libfuse/libfuse) filesystem that provides
-a bind-mounted view of these files and directories with their UIDs and GIDs
-mapped to your UID and GID.
+is a [FUSE](https://github.com/libfuse/libfuse) filesystem that
+can provide a bind-mounted view of these files and directories
+with their UIDs and GIDs mapped to your UID and GID.
 
 First install [bindfs](https://bindfs.org/) from the repositories of your
 distribution.
 
-Then create a mountpoint for a mapped view. In order to
+Then use either
+[`mount-docker-vol.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/mount-docker-vol.sh) or
+[`mount-podman-vol.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/mount-podman-vol.sh)
+to mount a view of `typo3-vol` at a directory. In order to
 keep IDE settings out of the TYPO3 installation, this should be a
 _subdirectory_ of your envisaged TYPO3 development directory:
 
 ```bash
-$ T3_MAPPED=~/typo3-dev/vol-mapped
-
-$ mkdir -p $T3_MAPPED
+$ mount-docker-vol.sh typo3-vol ~/typo3-dev/typo3-vol-mapped
 ```
 
-Now use bindfs to mount the `typo3-vol` directory at `$T3_MAPPED` with your
-UID and GID:
+Now your appear to be the owner of the files in `typo3-vol-mapped`:
 
 ```bash
-# Using Docker:
-$ T3_MNT=$(sudo docker volume inspect --format '{{.Mountpoint}}' typo3-vol)
-$ T3_UID=$(sudo stat --format '%u' $T3_MNT/public)   # unmapped UID
-$ T3_GID=$(sudo stat --format '%g' $T3_MNT/public)   # unmapped GID
-
-# Using Podman (rootless):
-$ T3_MNT=$(podman volume inspect --format '{{.MountPoint}}' typo3-vol)
-$ T3_UID=$(stat --format '%u' $T3_MNT/public)        # unmapped UID
-$ T3_GID=$(stat --format '%g' $T3_MNT/public)        # unmapped GID
-
-# Bind-mount typo3-vol with mapped UIDs/GIDs
-$ sudo bindfs \
-    --map=$T3_UID/$(id -u):@$T3_GID/@$(id -g) \
-    $T3_MNT \
-    $T3_MAPPED
-
-# UIDs/GIDs now mapped to the current user's UID/GID
-$ ls -nA $T3_MAPPED
+$ ls -nA ~/typo3-dev/typo3-vol-mapped
 
 -rw-r--r--  1 1000 1000   1117 Mai  3 23:00 composer.json
 -rw-r--r--  1 1000 1000 155056 Mai  3 23:01 composer.lock
@@ -289,10 +272,10 @@ drwxr-xr-x 15 1000 1000   4096 Mai  3 23:01 vendor
 
 #### Developing
 
-Open the _parent directory_ of `$T3_MAPPED` with your favorite IDE, e.g.
+Open the TYPO3 development directory with your favorite IDE, e.g.
 
 ```bash
-$ code $T3_MAPPED/..
+$ code ~/typo3-dev
 ```
 
 Any changes
@@ -319,7 +302,7 @@ TODO
 To clean up afterwards:
 
 ```bash
-$ sudo umount $T3_MAPPED
+$ sudo umount ~/typo3-dev/typo3-vol-mapped
 ```
 
 ### Accessing the TYPO3 database
