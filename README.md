@@ -198,8 +198,17 @@ _within the container_, e.g.
 $ docker exec typo3 composer require bk2k/bootstrap-package
 ```
 
-No working directory needs to be set since the container's `composer` command
-always acts on the TYPO3 installation.
+As a convenience, the scripts 
+[docker-composer.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-composer.sh) and
+[podman-composer.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/podman-composer.sh)
+can be used like the `composer` command:
+
+```bash
+$ docker-composer.sh require bk2k/bootstrap-package
+```
+
+Note that in the container `composer` always acts on the
+TYPO3 installation.
 
 Note that neither Composer nor PHP have to be installed on the host.
 
@@ -239,7 +248,7 @@ drwxr-xr-x 15 100099 100100   4096 Mai  3 23:01 vendor
 
 #### Preparation
 
-[bindfs](https://bindfs.org/) (available for Debian-like and MacOS hosts)
+[bindfs](https://bindfs.org/) (available only for Debian-like and MacOS hosts)
 is a [FUSE](https://github.com/libfuse/libfuse) filesystem that
 can provide a bind-mounted view of these files and directories
 with their UIDs and GIDs mapped to your UID and GID.
@@ -252,7 +261,7 @@ Then use either
 [`mount-podman-vol.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/mount-podman-vol.sh)
 to mount a view of `typo3-vol` at a directory. In order to
 keep IDE settings out of the TYPO3 installation, this should be a
-_subdirectory_ of your envisaged TYPO3 development directory:
+_subdirectory_ of your TYPO3 development workspace, e.g.:
 
 ```bash
 $ mount-docker-vol.sh typo3-vol ~/typo3-dev/typo3-vol-mapped
@@ -278,8 +287,9 @@ Open the TYPO3 development directory with your favorite IDE, e.g.
 $ code ~/typo3-dev
 ```
 
-Any changes
-you make in your IDE will be propagated to the running container automagically.
+Any changes you make in your IDE will be propagated to the running container automagically, and your UID/GID will be mapped
+back to container UIDs/GIDs.
+
 
 #### Changing the runtime environment
 
@@ -293,9 +303,11 @@ $ docker exec typo3 setenv MODE=xdebug php_post_max_size=1M
 
 These modifications are lost whenever the container is stopped.
 
+
 #### Debugging with XDebug
 
 TODO
+
 
 #### Cleaning up
 
@@ -305,9 +317,11 @@ To clean up afterwards:
 $ sudo umount ~/typo3-dev/typo3-vol-mapped
 ```
 
+
 ### Accessing the TYPO3 database
 
 TODO
+
 
 ## Licenses
 
