@@ -19,5 +19,6 @@ podman run \
     --rm \
     --volume typo3-vol:/var/www/localhost \
     --net container:postgresql \
+    --stop-timeout 2 \
     $@ \
     undecaf/typo3-dev

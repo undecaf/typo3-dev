@@ -20,5 +20,6 @@ podman run \
     --rm \
     --volume typo3-vol:/var/www/localhost \
     --net container:mariadb \
+    --stop-timeout 2 \
     $@ \
     undecaf/typo3-dev

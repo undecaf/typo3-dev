@@ -25,6 +25,7 @@ podman run \
     --pod typo3-pod \
     --hostname dev.typo3.local \
     --volume typo3-vol:/var/www/localhost \
+    --stop-timeout 2 \
     $@ \
     undecaf/typo3-dev
     
