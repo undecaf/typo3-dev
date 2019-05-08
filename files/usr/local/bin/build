@@ -90,7 +90,7 @@ apk add \
 
 # Install TYPO3 using Composer
 chown -R ${APACHE_USER}. $APACHE_HOME
-composer install
+composer install --no-progress
 touch $TYPO3_DOCROOT/FIRST_INSTALL
 chown ${APACHE_USER}. $TYPO3_DOCROOT/FIRST_INSTALL
 
