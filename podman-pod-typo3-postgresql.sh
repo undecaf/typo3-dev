@@ -24,6 +24,7 @@ podman run \
     --name typo3 \
     --pod typo3-pod \
     --hostname dev.typo3.local \
+    --env HOST_IP=$(hostname -I | awk '{print $1}') \
     --volume typo3-vol:/var/www/localhost \
     --stop-timeout 2 \
     $@ \

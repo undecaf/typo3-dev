@@ -1,5 +1,10 @@
 #!/bin/sh
 
+#
+# (Re-)Configures Apache, PHP and XDebug and runs
+# what was given as command line arguments
+#
+
 # Use the same environment as during build
 . /etc/environment
 
@@ -39,18 +44,31 @@ ln -sf /etc/apache2/conf.d/mode.conf.${MODE} /etc/apache2/conf.d/mode.conf
 ln -sf /etc/php7/mode.${MODE}.template /etc/php7/conf.d/zz_50_mode.ini
 
 # php.ini setting overrides
-export | awk -F ' |=' -e 'BEGIN { IGNORECASE = 1 }' -e '$2 ~ /^PHP_/ { gsub("^PHP_", "", $2); gsub(/'"'"'/, "", $3); printf "%s=%s\n", $2, $3; }' > /etc/php7/conf.d/zz_99_overrides.ini
+export \
+    | awk -F ' |=' \
+        -e 'BEGIN { IGNORECASE = 1 }' \
+        -e '$2 ~ /^PHP_/ { gsub("^PHP_", "", $2); gsub(/'"'"'/, "", $3); printf "%s=%s\n", $2, $3; }' \
+    > /etc/php7/conf.d/zz_99_overrides.ini
+
 if [ -s /etc/php7/conf.d/zz_99_overrides.ini ]; then
 	echo "Overriding these php.ini settings:"
-	cat /etc/php7/conf.d/zz_99_overrides.ini
+	cat /etc/php7/conf.d/zz_99_overrides.ini | sed 's/\(.*\)/  \1/'
 fi
 
 # Enable/disable XDebug support
 if [ -n "$XDEBUG" ]; then
-	ln -sf /etc/php7/xdebug.ini.template /etc/php7/conf.d/xdebug.ini
-	echo "XDebug enabled"
+    # Connect back only if host IP not specified
+    export REMOTE_HOST=$HOST_IP
+    test -n "$HOST_IP"
+    export REMOTE_CONNECT_BACK=$?
+
+	cat /etc/php7/xdebug.ini.template | envsubst > /etc/php7/conf.d/xdebug.ini
+	echo "XDebug enabled:"
+    grep -E '^xdebug\.remote_(host|connect_back)=' /etc/php7/conf.d/xdebug.ini \
+        | sed 's/\(.*\)/  \1/'
+
 else
-	rm -f /etc/php7/conf.d/xdebug.ini
+	truncate -s 0 /etc/php7/conf.d/xdebug.ini
 	echo "XDebug disabled"
 fi
 

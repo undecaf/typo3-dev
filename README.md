@@ -12,10 +12,11 @@ The TYPO3 container can be linked to a database container such as
 [MySQL or PostgreSQL](#using-mariadb-or-postgresql)
 but also can be run independently due to the built-in SQLite database.
 
-You can use your favorite IDE on the host to develop for TYPO3 in the container.
+You can use your favorite IDE on the host to develop for TYPO3 in the container, including remote debugging with XDebug.
+PHP and Composer do not need to be installed on the host.
+
 File access rights, ownerships, UIDs and GIDs are transparently and consistently
-mapped between host and container. PHP and Composer do not need to be installed
-on the host.
+mapped between host and container.
 
 
 ## Contents
@@ -55,6 +56,7 @@ $ docker run \
     --rm \
     --name typo3 \
     --hostname dev.typo3.local \
+    --env HOST_IP=$(hostname -I | awk '{print $1}') \
     --volume typo3-vol:/var/www/localhost \
     --publish 127.0.0.1:8080:80 \
     undecaf/typo3-dev
@@ -126,11 +128,12 @@ $ podman pod start typo3-pod
 ### Volumes
 
 Named volumes persist the TYPO3 state beyond container lifetime.
-Volume names and their mountpoints are:
+Volume names and their container mountpoints are:
 
 -   `typo3-vol:/var/www/localhost`: TYPO3 installation directory where
     `composer.json` is located. The TYPO3 SQLite database (if used) can 
-    be found at `/var/www/localhost/var/sqlite`.
+    be found at `/var/www/localhost/var/sqlite`,
+    Apache and XDebug logs at `/var/www/logs`.
 -   `mariadb-vol:/bitnami/mariadb`: contains the MariaDB database if used.
 -   `postgresql-vol:/bitnami/postgresql`: contains the PostgreSQL database if used.
 
@@ -181,7 +184,7 @@ defaults to `localhost`.
     settings with the prefix removed, e.g. `--env php_post_max_size=5M` becomes 
     `post_max_size=5M`. These settings override prior settings and `MODE`.
 
-`--hostname` and `--env` arguments can given to any of the `podman-*` scripts.
+`--hostname` and `--env` arguments can be given to any of the `podman-*` scripts.
 
 `--env` settings can be altered even
 [while the container is running](#changing-the-runtime-environment).
@@ -201,16 +204,16 @@ $ docker exec typo3 composer require bk2k/bootstrap-package
 As a convenience, the scripts 
 [docker-composer.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-composer.sh) and
 [podman-composer.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/podman-composer.sh)
-can be used like the `composer` command:
+can be used similar to the `composer` command:
 
 ```bash
 $ docker-composer.sh require bk2k/bootstrap-package
 ```
 
-Note that in the container `composer` always acts on the
+In the container `composer` always acts on the
 TYPO3 installation.
 
-Note that neither Composer nor PHP have to be installed on the host.
+Neither Composer nor PHP have to be installed on the host.
 
 
 ### Using your favorite IDE
@@ -219,9 +222,7 @@ Note that neither Composer nor PHP have to be installed on the host.
 
 The TYPO3 installation is accessible outside of the 
 container at the mount point of `typo3-vol`. However, the container's UIDs and GIDs
-are different from your own ones.
-
-To view Docker container UIDs and GIDs:
+are different from your own ones:
 
 ```bash
 $ sudo ls -nA $(sudo docker volume inspect --format '{{.Mountpoint}}' typo3-vol)
@@ -250,8 +251,9 @@ drwxr-xr-x 15 100099 100100   4096 Mai  3 23:01 vendor
 
 [bindfs](https://bindfs.org/) (available only for Debian-like and MacOS hosts)
 is a [FUSE](https://github.com/libfuse/libfuse) filesystem that
-can provide a bind-mounted view of these files and directories
-with their UIDs and GIDs mapped to your UID and GID.
+resolves this situation. It can provide a bind-mounted view of
+the files and directories in a volume with their UIDs and GIDs
+mapped to your own UID and GID.
 
 First install [bindfs](https://bindfs.org/) from the repositories of your
 distribution.
@@ -259,9 +261,9 @@ distribution.
 Then use either
 [`mount-docker-vol.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/mount-docker-vol.sh) or
 [`mount-podman-vol.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/mount-podman-vol.sh)
-to mount a view of `typo3-vol` at a directory. In order to
-keep IDE settings out of the TYPO3 installation, this should be a
-_subdirectory_ of your TYPO3 development workspace, e.g.:
+to mount a view of `typo3-vol` at a _subdirectory_ of your
+TYPO3 development workspace (in order to keep IDE settings out
+of the TYPO3 installation), e.g.:
 
 ```bash
 $ mount-docker-vol.sh typo3-vol ~/typo3-dev/typo3-vol-mapped
@@ -281,13 +283,13 @@ drwxr-xr-x 15 1000 1000   4096 Mai  3 23:01 vendor
 
 #### Developing
 
-Open the TYPO3 development directory with your favorite IDE, e.g.
+Open the TYPO3 development workspace with your favorite IDE, e.g.
 
 ```bash
 $ code ~/typo3-dev
 ```
 
-Any changes you make in your IDE will be propagated to the running container automagically, and your UID/GID will be mapped
+Any changes you make in your IDE will be propagated to the running container automagically with your UID/GID mapped
 back to container UIDs/GIDs.
 
 
@@ -301,12 +303,64 @@ is running, e.g. in order to switch `MODE` or to experiment with different
 $ docker exec typo3 setenv MODE=xdebug php_post_max_size=1M
 ```
 
+[docker-setenv.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-setenv.sh) and
+[podman-setenv.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/podman-setenv.sh)
+can save a little bit of typing:
+
+```bash
+$ docker-setenv MODE=xdebug php_post_max_size=1M
+```
+
 These modifications are lost whenever the container is stopped.
 
 
 #### Debugging with XDebug
 
-TODO
+##### Set up your IDE for XDebug
+
+-   PhpStorm et al.: [Debugging within a PHP Docker Container using IDEA/PhpStorm and Xdebug: Configure IntelliJ IDEA Ultimate or PhpStorm](https://phauer.com/2017/debug-php-docker-container-idea-phpstorm/#configure-intellij-idea-ultimate-or-phpstorm)
+-   VSCode: install 
+    [PHP Debug](https://github.com/felixfbecker/vscode-php-debug),
+    add the following configuration to your `launch.json` file
+    and start debugging with this configuration. If necessary, replace `typo3-vol-mapped` with the actual mount directory of `typo3-vol`:
+    ```json
+    {
+        "name": "Listen for XDebug from container",
+        "type": "php",
+        "request": "launch",
+        "port": 9000,
+        "pathMappings": {
+            "/var/www/localhost": "${workspaceRoot}/typo3-vol-mapped"
+        }
+    }
+    ```
+
+
+##### Install browser debugging plugins
+
+Although not strictly required, debugging plugins make starting
+a XDebug session more convenient.
+[Browser Debugging Extensions](https://www.jetbrains.com/help/phpstorm/browser-debugging-extensions.html#Browser_Debugging_Extensions.xml)
+lists recommended plugins for various browsers.
+
+
+##### Activate XDebug in the container
+
+Podman containers must be told the host IP in order for XDebug
+to connect back to your IDE. Therefore the `podman run` command  must include this argument:
+
+```bash
+--env HOST_IP=$(hostname -I | awk '{print $1}')
+```
+
+Unless the container was started with `MODE=xdebug`, this mode
+needs to be activated now:
+
+```bash
+$ docker-setenv.sh MODE=xdebug
+```
+
+Now everything is ready to start a XDebug session.
 
 
 #### Cleaning up

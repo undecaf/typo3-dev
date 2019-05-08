@@ -12,6 +12,7 @@ apk upgrade
 apk add \
 	bash \
 	nano \
+    gettext \
 	tzdata \
 	curl \
 	ca-certificates \
