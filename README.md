@@ -4,9 +4,7 @@ This project provides a containerized TYPO3 installation equivalent to
 [`composer require typo3/cms`](https://packagist.org/packages/typo3/cms) with
 [ImageMagick](https://www.imagemagick.org/) installed and configured for
 [Composer Mode](https://wiki.typo3.org/Composer#Composer_Mode).
-
-The image is based on [Alpine Linux](https://alpinelinux.org/), Apache and
-PHP&nbsp;7 and is quite compact (280&nbsp;MB).
+The image is based on [Alpine Linux](https://alpinelinux.org/), Apache and PHP&nbsp;7 and is compact.
 
 The TYPO3 container can be linked to a database container such as
 [MySQL or PostgreSQL](#using-mariadb-or-postgresql)
@@ -56,7 +54,6 @@ $ docker run \
     --rm \
     --name typo3 \
     --hostname dev.typo3.local \
-    --env HOST_IP=$(hostname -I | awk '{print $1}') \
     --volume typo3-vol:/var/www/localhost \
     --publish 127.0.0.1:8080:80 \
     undecaf/typo3-dev
@@ -212,7 +209,6 @@ $ docker-composer.sh require bk2k/bootstrap-package
 
 In the container `composer` always acts on the
 TYPO3 installation.
-
 Neither Composer nor PHP have to be installed on the host.
 
 
@@ -234,7 +230,7 @@ drwxrwsr-x  7 100 101   4096 Mai  3 23:02 var
 drwxr-xr-x 15 100 101   4096 Mai  3 23:01 vendor
 ```
 
-To view Podman container UIDs and GIDs (rootless):
+Showing rootless Podman container UIDs and GIDs:
 
 ```bash
 $ ls -nA $(podman volume inspect --format '{{.MountPoint}}' typo3-vol)
@@ -347,7 +343,8 @@ lists recommended plugins for various browsers.
 ##### Activate XDebug in the container
 
 Podman containers must be told the host IP in order for XDebug
-to connect back to your IDE. Therefore the `podman run` command  must include this argument:
+to connect back to your IDE. If you did not start TYPO3 with one
+of the scripts, your `podman run` command  must include this argument:
 
 ```bash
 --env HOST_IP=$(hostname -I | awk '{print $1}')
@@ -374,7 +371,23 @@ $ sudo umount ~/typo3-dev/typo3-vol-mapped
 
 ### Accessing the TYPO3 database
 
-TODO
+#### SQLite
+
+`typo3-vol` needs to be mounted as [described above](#preparation).
+Point your database client at the file `var/sqlite/cms-*.sqlite`
+in the mounted volume.
+This is the TYPO3 SQLite database. The actual filename contains
+a random part.
+
+
+#### MariaDB and PostgreSQL
+
+`typo3-vol` does not need to be mounted. MariaDB is published at
+`127.0.0.1:3306` and PostgreSQL at `127.0.0.1:5432`.
+
+The database name, user name and password are all set to `t3`.
+Yes, I know.
+
 
 
 ## Licenses
