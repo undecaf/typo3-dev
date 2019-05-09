@@ -1,5 +1,7 @@
 # Developing for TYPO3 with Docker or Podman
 
+[![Build Status](https://travis-ci.com/undecaf/typo3-dev.svg?branch=master)](https://travis-ci.com/undecaf/typo3-dev)
+
 This project provides a containerized TYPO3 installation equivalent to
 [`composer require typo3/cms`](https://packagist.org/packages/typo3/cms) with
 [ImageMagick](https://www.imagemagick.org/) installed and configured for
