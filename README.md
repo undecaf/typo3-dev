@@ -157,14 +157,14 @@ And yes, security could be improved here...
 
 ### TYPO3 runtime configuration
 
-##### `--hostname` / `container_name`
+#### `--hostname` / `container_name`
 
 Determines both the TYPO3 container hostname and the Apache
 `ServerName` and `ServerAdmin`. If omitted
 then the TYPO3 container gets a random hostname, and `ServerName`
 defaults to `localhost`.
 
-##### `--env` / `environment` settings
+#### `--env` / `environment` settings
 
 -   `TIMEZONE`: sets the TYPO3 container timezone (e.g. `Europe/Vienna`),
     default: UTC.
@@ -287,8 +287,8 @@ Open the TYPO3 development workspace with your favorite IDE, e.g.
 $ code ~/typo3-dev
 ```
 
-Any changes you make in your IDE will be propagated to the running container automagically with your UID/GID mapped
-back to container UIDs/GIDs.
+Any changes you make in your IDE will be propagated to the running container
+automagically with your UID/GID mapped back to container UIDs/GIDs.
 
 
 #### Changing the runtime environment
