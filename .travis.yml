@@ -7,18 +7,18 @@ before_script:
   - docker pull $TRAVIS_REPO_SLUG || true
 
 script:
-  - .travis/build.sh $TRAVIS_REPO_SLUG $TRAVIS_TAG
+  - .travis/build.sh $TRAVIS_TAG
 
 before_deploy:
   - docker login --username "$REGISTRY_USER" --password "$REGISTRY_PASS"
 
 deploy:
   - provider: script
-    script: .travis/push.sh $TRAVIS_REPO_SLUG
+    script: .travis/push.sh
     on:
       branch: master
 
   - provider: script
-    script: .travis/push.sh $TRAVIS_REPO_SLUG $TRAVIS_TAG
+    script: .travis/push.sh $TRAVIS_TAG
     on:
       tags: true

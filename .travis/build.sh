@@ -1,16 +1,14 @@
 #!/bin/bash
 
-# Usage: build.sh [OWNER/REPO] [TAG]
+# Usage: build.sh [TAG]
 
 shorten_tag() {
     test "$1" != "${1%.*}" && echo "$(shorten_tag ${1%.*}) $1"
 }
 
-OWNER_REPO=$1
-
-docker build --pull --cache-from $OWNER_REPO --tag $OWNER_REPO .
+docker build --pull --cache-from $TRAVIS_REPO_SLUG --tag $TRAVIS_REPO_SLUG .
 
 for T in $(shorten_tag $2) latest; do 
-    echo "*************** Tagging $OWNER_REPO as $OWNER_REPO:$T"
-    docker tag $OWNER_REPO $OWNER_REPO:$T
+    echo "*************** Tagging $TRAVIS_REPO_SLUG as $TRAVIS_REPO_SLUG:$T"
+    docker tag $TRAVIS_REPO_SLUG $TRAVIS_REPO_SLUG:$T
 done
