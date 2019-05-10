@@ -85,7 +85,7 @@ as TYPO3 database.
 #### Docker Compose
 
 If [Docker Compose](https://docs.docker.com/compose/) is installed on your host then
-[`docker-compose/typo3-mariadb.yml`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-compose/typo3-mariadb.yml)
+[`typo3-mariadb.yml`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-compose/typo3-mariadb.yml)
 will start TYPO3 with MariaDB:
 
 ```bash
@@ -93,7 +93,7 @@ $ docker-compose -f docker-compose/typo3-mariadb.yml up -d
 ```
 
 For PostgreSQL, use
-[`docker-compose/typo3-postgresql.yml`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-compose/typo3-postgresql.yml) instead.
+[`typo3-postgresql.yml`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-compose/typo3-postgresql.yml) instead.
 
 
 #### Podman
