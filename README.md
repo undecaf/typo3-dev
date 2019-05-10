@@ -85,22 +85,22 @@ as TYPO3 database.
 #### Docker Compose
 
 If [Docker Compose](https://docs.docker.com/compose/) is installed on your host then
-[`docker-compose-typo3-mariadb.yml`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-compose-typo3-mariadb.yml)
+[`docker-compose/typo3-mariadb.yml`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-compose/typo3-mariadb.yml)
 will start TYPO3 with MariaDB:
 
 ```bash
-$ docker-compose -f docker-compose-typo3-mariadb.yml up -d
+$ docker-compose -f docker-compose/typo3-mariadb.yml up -d
 ```
 
 For PostgreSQL, use
-[`docker-compose-typo3-postgresql.yml`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-compose-typo3-postgresql.yml) instead.
+[`docker-compose/typo3-postgresql.yml`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-compose/typo3-postgresql.yml) instead.
 
 
 #### Podman
 
 The scripts
-[`podman-typo3-mariadb.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/podman-typo3-mariadb.sh) and
-[`podman-typo3-postgresql.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/podman-typo3-postgresql.sh)
+[`podman-typo3-mariadb.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/podman-typo3-mariadb.sh) and
+[`podman-typo3-postgresql.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/podman-typo3-postgresql.sh)
 start the TYPO3 and the database container separately but with a shared network
 stack. `127.0.0.1` is shared _among_ the containers but is separate from `127.0.0.1`
 at the host.
@@ -108,8 +108,8 @@ at the host.
 
 #### Podman pod
 
-[`podman-pod-typo3-mariadb.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/podman-pod-typo3-mariadb.sh) and
-[`podman-pod-typo3-postgresql.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/podman-pod-typo3-postgresql.sh)
+[`podman-pod-typo3-mariadb.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/podman-pod-typo3-mariadb.sh) and
+[`podman-pod-typo3-postgresql.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/podman-pod-typo3-postgresql.sh)
 create a
 [pod](https://developers.redhat.com/blog/2019/01/15/podman-managing-containers-pods/)
 named `typo3-pod` which contains the TYPO3 and the database containers.
@@ -201,8 +201,8 @@ $ docker exec typo3 composer require bk2k/bootstrap-package
 ```
 
 As a convenience, the scripts 
-[docker-composer.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-composer.sh) and
-[podman-composer.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/podman-composer.sh)
+[docker-composer.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/docker-composer.sh) and
+[podman-composer.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/podman-composer.sh)
 can be used similar to the `composer` command:
 
 ```bash
@@ -257,8 +257,8 @@ First install [bindfs](https://bindfs.org/) from the repositories of your
 distribution.
 
 Then use either
-[`mount-docker-vol.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/mount-docker-vol.sh) or
-[`mount-podman-vol.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/mount-podman-vol.sh)
+[`mount-docker-vol.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/mount-docker-vol.sh) or
+[`mount-podman-vol.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/mount-podman-vol.sh)
 to mount a view of `typo3-vol` at a _subdirectory_ of your
 TYPO3 development workspace (in order to keep IDE settings out
 of the TYPO3 installation), e.g.:
@@ -301,8 +301,8 @@ is running, e.g. in order to switch `MODE` or to experiment with different
 $ docker exec typo3 setenv MODE=xdebug php_post_max_size=1M
 ```
 
-[docker-setenv.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/docker-setenv.sh) and
-[podman-setenv.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/podman-setenv.sh)
+[docker-setenv.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/docker-setenv.sh) and
+[podman-setenv.sh](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/podman-setenv.sh)
 can save a little bit of typing:
 
 ```bash
