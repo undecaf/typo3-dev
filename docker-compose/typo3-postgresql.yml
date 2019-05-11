@@ -16,6 +16,8 @@ services:
   typo3:
     image: "undecaf/typo3-dev"
     container_name: "typo3"
+    cap_add:
+      - SYS_ADMIN
     volumes:
       - "typo3-vol:/var/www/localhost"
     ports:

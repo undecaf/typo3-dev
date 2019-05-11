@@ -12,11 +12,15 @@ The TYPO3 container can be linked to a database container such as
 [MySQL or PostgreSQL](#using-mariadb-or-postgresql)
 but also can be run independently due to the built-in SQLite database.
 
-You can use your favorite IDE on the host to develop for TYPO3 in the container, including remote debugging with XDebug.
+You can use your favorite IDE on the host to
+[develop for TYPO3](#developing-for-typo3) in the container,
+including [remote debugging with XDebug](#debugging-with-xdebug).
+Your extension development directories can be
+[excluded from changes made by Composer](#typo3-runtime-configuration).
 PHP and Composer do not need to be installed on the host.
 
 File access rights, ownerships, UIDs and GIDs are transparently and consistently
-mapped between host and container.
+[mapped between host and container](#preparation).
 
 
 ## Contents
@@ -36,7 +40,7 @@ mapped between host and container.
     -   [Using your favorite IDE](#using-your-favorite-ide)
         -   [Background](#background)
         -   [Preparation](#preparation)
-        -   [Developing](#developing-1)
+        -   [Developing](#developing)
         -   [Changing the runtime environment](#changing-the-runtime-environment)
         -   [Debugging with XDebug](#debugging-with-xdebug)
         -   [Cleaning up](#cleaning-up)
@@ -56,6 +60,7 @@ $ docker run \
     --rm \
     --name typo3 \
     --hostname dev.typo3.local \
+    --cap-add=SYS_ADMIN \
     --volume typo3-vol:/var/www/localhost \
     --publish 127.0.0.1:8080:80 \
     undecaf/typo3-dev
@@ -182,6 +187,11 @@ defaults to `localhost`.
 -   `PHP_...`: environment variables prefixed with `PHP_` or `php_` become `php.ini`
     settings with the prefix removed, e.g. `--env php_post_max_size=5M` becomes 
     `post_max_size=5M`. These settings override prior settings and `MODE`.
+
+-   `COMPOSER_EXCLUDE`: a colon-separated list of directory paths relative to
+    `/var/www/localhost` which are to be excluded from the effects of Composer
+    operations. This is intended e.g. to protect the current version of an extension
+    your are developing from being „updated“ to the version stored in a repository.
 
 `--hostname` and `--env` arguments can be given to any of the `podman-*` scripts.
 

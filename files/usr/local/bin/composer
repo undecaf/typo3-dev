@@ -1,2 +1,26 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
+
+if [ -f $COMPOSER_EXCLUDE_FILE ]; then
+    # Sub-mount protected directories, making sure that each sub-mounted directory is unmounted afterwards
+    . /etc/environment
+    COMPOSER_EXCLUDE_ROOT=$APACHE_HOME/composer-exclude
+    TRAP_CMDS='set +e'
+
+    for D in $(cat $COMPOSER_EXCLUDE_FILE); do
+        if [ -n "$D" -a -d $TYPO3_ROOT/$D ]; then
+            mkdir -p $COMPOSER_EXCLUDE_ROOT/$D
+            chown ${APACHE_USER}. $COMPOSER_EXCLUDE_ROOT
+            mount --bind $TYPO3_ROOT/$D $COMPOSER_EXCLUDE_ROOT/$D
+            echo "Excluded $D"
+            TRAP_CMDS="${TRAP_CMDS}; umount $COMPOSER_EXCLUDE_ROOT/$D && echo 'Included '$D' again'"
+            trap "$TRAP_CMDS" EXIT
+        else
+            echo "Did not exclude $D: $TYPO3_ROOT/$D is not a directory in the container"
+        fi
+    done
+fi
+
+# Run Composer in TYPO3 context
 su apache -s /bin/sh -l -c ". /etc/environment; /usr/local/bin/composer.phar --working-dir=\$TYPO3_ROOT $*"

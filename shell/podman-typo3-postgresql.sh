@@ -18,6 +18,7 @@ podman run \
     --detach \
     --rm \
     --env HOST_IP=$(hostname -I | awk '{print $1}') \
+    --cap-add=SYS_ADMIN \
     --volume typo3-vol:/var/www/localhost \
     --net container:postgresql \
     --stop-timeout 2 \

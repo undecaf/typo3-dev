@@ -78,6 +78,10 @@ chown -R apache:apache $APACHE_HOME
 # Clean up Apache PID files only if this is the initial process
 [ $$ -eq 1 ] && rm -f /run/apache2/apache2.pid /run/apache2/httpd.pid
 
+# Save/update the list of directories to be excluded from Composer operations
+# only if $COMPOSER_EXCLUDE is set to any (even an empty) value
+[ -z ${COMPOSER_EXCLUDE+x} ] || echo "${COMPOSER_EXCLUDE//:/ }" > $COMPOSER_EXCLUDE_FILE
+
 # Execute Dockerfile CMD or command line
 echo "Executing '$@', PID = $$"
 $@

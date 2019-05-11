@@ -16,7 +16,8 @@ apk add \
 	tzdata \
 	curl \
 	ca-certificates \
-	openssl
+	openssl \
+    libcap
 
 # Install Apache and PHP
 apk add \
@@ -102,8 +103,12 @@ rm -rf $TYPO3_ROOT/htdocs $TYPO3_ROOT/cgi-bin
 find $APACHE_HOME -type d -exec chmod 755 {} \;
 chown -R ${APACHE_USER}. $APACHE_HOME
 
+# wget -q -O /tmp/mailslurper.zip https://github.com/mailslurper/mailslurper/releases/download/1.14.1/mailslurper-1.14.1-linux.zip
+# unzip -d /home/mailslurper /tmp/mailslurper.zip
+# setcap cap_net_bind_service=+eip /home/mailslurper/mailslurper
+
 # Make executables executable
 chmod 755 /usr/local/bin/*
 
 # Clean up
-rm -rf $APACHE_HOME/.composer /var/cache/apk/* $0
+rm -rf $APACHE_HOME/.composer /var/cache/apk/* /tmp/* $0
