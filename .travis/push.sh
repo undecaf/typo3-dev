@@ -2,13 +2,15 @@
 
 # Usage: push.sh [TAG]
 
-shorten_tag() {
-    test "$1" != "${1%.*}" && echo "$(shorten_tag ${1%.*}) $1"
+minor_tag() {
+    local RE='([0-9]+\.[0-9]+)(\..+)?'
+    [[ "$1" =~ $RE ]] && echo ${BASH_REMATCH[1]} || echo "$1"
 }
 
-for T in $(shorten_tag $2) latest; do 
-    echo "*************** Pushing $TRAVIS_REPO_SLUG:$T"
-    docker push $TRAVIS_REPO_SLUG:$T
+# Use only MAJOR.MINOR and 'latest' as container version
+for T in $(minor_tag $2) latest; do 
+    echo "*************** Pushing $TRAVIS_REPO_SLUG:$TYPO3_VER-$T"
+    docker push $TRAVIS_REPO_SLUG:$TYPO3_VER-$T
 done
 
 echo "*************** Pushing README.md"

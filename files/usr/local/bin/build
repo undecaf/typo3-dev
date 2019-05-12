@@ -29,7 +29,12 @@ apk add \
 	php7-iconv \
 	php7-openssl
 
-# Same environment as at runtime
+# Set up the runtime environment
+cat << EOF >> /etc/environment
+CONTAINER_VER=$CONTAINER_VER
+TYPO3_VER=$TYPO3_VER
+EOF
+
 . /etc/environment
 
 # Install Composer
@@ -89,7 +94,9 @@ apk add \
 	php7-xsl \
 	php7-zip
 
-# Install TYPO3 using Composer
+# Install TYPO3 version $TYPO3_VER using Composer
+mv $TYPO3_ROOT/composer-${TYPO3_VER}.json $TYPO3_ROOT/composer.json
+rm -f $TYPO3_ROOT/composer-*.json
 chown -R $APACHE_USER: $APACHE_HOME
 composer install --no-progress
 touch $TYPO3_DOCROOT/FIRST_INSTALL
@@ -103,12 +110,8 @@ rm -rf $TYPO3_ROOT/htdocs $TYPO3_ROOT/cgi-bin
 find $APACHE_HOME -type d -exec chmod 755 {} \;
 chown -R $APACHE_USER: $APACHE_HOME
 
-# wget -q -O /tmp/mailslurper.zip https://github.com/mailslurper/mailslurper/releases/download/1.14.1/mailslurper-1.14.1-linux.zip
-# unzip -d /home/mailslurper /tmp/mailslurper.zip
-# setcap cap_net_bind_service=+eip /home/mailslurper/mailslurper
-
 # Make executables executable
 chmod 755 /usr/local/bin/*
 
 # Clean up
-rm -rf $APACHE_HOME/.composer /var/cache/apk/* /tmp/* $0
+rm -rf $APACHE_HOME/.composer /var/cache/apk/* $0

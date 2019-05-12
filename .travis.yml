@@ -3,6 +3,11 @@ language: bash
 services:
   - docker
 
+env:
+  matrix:
+    - TYPO3_VER=8.7
+    - TYPO3_VER=9.5
+
 before_script:
   - docker pull $TRAVIS_REPO_SLUG || true
 
