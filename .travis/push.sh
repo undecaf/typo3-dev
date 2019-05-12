@@ -8,9 +8,9 @@ minor_tag() {
 }
 
 # Use only MAJOR.MINOR and 'latest' as container version
-for T in $(minor_tag $2) latest; do 
-    echo "*************** Pushing $TRAVIS_REPO_SLUG:$TYPO3_VER-$T"
-    docker push $TRAVIS_REPO_SLUG:$TYPO3_VER-$T
+for T in ${TYPO3_VER}-$(minor_tag $2) ${TYPO3_VER}-latest $EXTRA_TAG; do 
+    echo "*************** Pushing $TRAVIS_REPO_SLUG:$T"
+    docker push $TRAVIS_REPO_SLUG:$T
 done
 
 echo "*************** Pushing README.md"

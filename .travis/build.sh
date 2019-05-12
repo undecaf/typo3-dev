@@ -16,7 +16,7 @@ docker build \
     .
 
 # Use only MAJOR.MINOR and 'latest' as container version
-for T in $(minor_tag $2) latest; do 
-    echo "*************** Tagging $TRAVIS_REPO_SLUG as $TRAVIS_REPO_SLUG:$TYPO3_VER-$T"
-    docker tag $TRAVIS_REPO_SLUG $TRAVIS_REPO_SLUG:$TYPO3_VER-$T
+for T in ${TYPO3_VER}-$(minor_tag $2) ${TYPO3_VER}-latest $EXTRA_TAG; do 
+    echo "*************** Tagging $TRAVIS_REPO_SLUG as $TRAVIS_REPO_SLUG:$T"
+    docker tag $TRAVIS_REPO_SLUG $TRAVIS_REPO_SLUG:$T
 done
