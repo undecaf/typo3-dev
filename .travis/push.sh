@@ -2,13 +2,11 @@
 
 # Usage: push.sh [TAG]
 
-minor_tag() {
-    local RE='([0-9]+\.[0-9]+)(\..+)?'
-    [[ "$1" =~ $RE ]] && echo ${BASH_REMATCH[1]} || echo "$1"
-}
+# Use only MAJOR.MINOR of tag
+RE='([0-9]+\.[0-9]+)(\..+)?'
+[[ "$1" =~ $RE ]] && TAG=${BASH_REMATCH[1]} || TAG="$1"
 
-# Use only MAJOR.MINOR and 'latest' as container version
-for T in ${TYPO3_VER}-$(minor_tag $2) ${TYPO3_VER}-latest $EXTRA_TAG; do 
+for T in ${TAG:+$TYPO3_VER-$TAG} ${TYPO3_VER}-latest $EXTRA_TAGS; do 
     echo "*************** Pushing $TRAVIS_REPO_SLUG:$T"
     docker push $TRAVIS_REPO_SLUG:$T
 done
