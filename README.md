@@ -2,32 +2,34 @@
 
 [![Build Status](https://travis-ci.com/undecaf/typo3-dev.svg?branch=master)](https://travis-ci.com/undecaf/typo3-dev)
 
-This project provides a containerized TYPO3 9.5/8.7 installation equivalent to
+This project provides a containerized TYPO3 installation equivalent to
 [`composer require typo3/cms`](https://packagist.org/packages/typo3/cms) with
 [ImageMagick](https://www.imagemagick.org/) installed and configured for
 [Composer Mode](https://wiki.typo3.org/Composer#Composer_Mode).
-The image is based on [Alpine Linux](https://alpinelinux.org/), Apache and 
-the latest PHP&nbsp;7 and is compact.
+The image is based on [Alpine Linux](https://alpinelinux.org/), Apache and PHP&nbsp;7 and is compact.
 
 The TYPO3 container can be linked to a database container such as
-[MySQL or PostgreSQL](#using-mariadb-or-postgresql). TYPO3&nbsp;9.5
-can run also standalone with the included SQLite database.
+[MySQL or PostgreSQL](#using-mariadb-or-postgresql)
+but also can be run independently due to the built-in SQLite database.
 
 You can use your favorite IDE on the host to
 [develop for TYPO3](#developing-for-typo3) in the container,
 including [remote debugging with XDebug](#debugging-with-xdebug).
 Your extension development directories can be
-[protected from changes made by Composer](#typo3-runtime-configuration).
+[excluded from changes made by Composer](#typo3-runtime-configuration).
 PHP and Composer do not need to be installed on the host.
 
 File access rights, ownerships, UIDs and GIDs are transparently and consistently
 [mapped between host and container](#preparation).
 
+## What you get
+
+![Parts of this project in a block diagram: containers for TYPO3 and database, browser and IDE](https://undecaf.github.io/typo3-dev/img/overview.png)
 
 ## Contents
 
 -   [Running TYPO3](#running-typo3)
-    -   [Quick start](#quick-start)
+    -   [TL;DR (quick & dirty)](#tldr-quick--dirty)
     -   [Using MariaDB or PostgreSQL](#using-mariadb-or-postgresql)
         -   [Docker Compose](#docker-compose)
         -   [Podman](#podman)
@@ -51,7 +53,7 @@ File access rights, ownerships, UIDs and GIDs are transparently and consistently
 
 ## Running TYPO3
 
-### Quick start
+### TL;DR (quick & dirty)
 
 To start a TYPO3 instance in a standalone container, do this
 (or run
@@ -191,13 +193,11 @@ defaults to `localhost`.
     settings with the prefix removed, e.g. `--env php_post_max_size=5M` becomes 
     `post_max_size=5M`. These settings override prior settings and `MODE`.
 
--   `COMPOSER_EXCLUDE`: a colon-separated list of (relative) subdirectory paths of
+-   `COMPOSER_EXCLUDE`: a colon-separated list of directory paths relative to
     `/var/www/localhost` which are to be excluded from the effects of [Composer operations](#composer).  
     This is intended e.g. to protect the current version of
     an extension you are developing from being „updated“ to an older version stored in a repository.  
-    These directories need to exist only when Composer is invoked.
-
-#### Scope
+    The directories need to exist only when Composer is invoked.
 
 `--hostname` and `--env` arguments can be given to any of the `podman-*` scripts.
 
@@ -360,8 +360,8 @@ lists recommended plugins for various browsers.
 
 ##### Activate XDebug in the container
 
-Podman containers need to be told the host IP in order for XDebug
-connecting back to your IDE. If you did not start TYPO3 with one
+Podman containers must be told the host IP in order for XDebug
+to connect back to your IDE. If you did not start TYPO3 with one
 of the scripts, your `podman run` command  must include this argument:
 
 ```bash
@@ -400,18 +400,17 @@ a random part.
 
 #### MariaDB and PostgreSQL
 
-MariaDB is published at `127.0.0.1:3306` and PostgreSQL at `127.0.0.1:5432`.
+`typo3-vol` does not need to be mounted. MariaDB is published at
+`127.0.0.1:3306` and PostgreSQL at `127.0.0.1:5432`.
 
 The database name, user name and password are all set to `t3`.
-Yes, [I know](#database-credentials).
+Yes, I know.
 
 
 
 ## Licenses
 
-Scripts in this repository are licensed under the
-[GPL&nbsp;3.0](https://www.gnu.org/licenses/gpl-3.0.en.html).
-This document is licensed under the
-[Creative Commons license CC&nbsp;BY-SA&nbsp;3.0](http://creativecommons.org/licenses/by-sa/3.0/).
+Scripts in this repository are licensed under the GPL&nbsp;3.0.
+This document is licensed under the Creative Commons license CC&nbsp;BY-SA&nbsp;3.0.
 For licenses regarding container images, please refer to 
 [this discussion](https://opensource.stackexchange.com/questions/7013/license-for-docker-images#answer-7015).
