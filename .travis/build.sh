@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: build.sh [TAG]
+# Usage: build.sh [EXTRA-TAG]
 
 docker build \
     --pull \
@@ -10,11 +10,11 @@ docker build \
     --tag $TRAVIS_REPO_SLUG \
     .
 
-# Use only MAJOR.MINOR of tag
-RE='([0-9]+\.[0-9]+)(\..+)?'
-[[ "$1" =~ $RE ]] && TAG=${BASH_REMATCH[1]} || TAG="$1"
+# Use only MAJOR.MINOR of $TRAVIS_TAG
+RE='^([0-9]+\.[0-9]+)(\..+)?'
+[[ "$TRAVIS_TAG" =~ $RE ]] && TAG=${BASH_REMATCH[1]} || TAG=
 
-for T in ${TAG:+$TYPO3_VER-$TAG} ${TYPO3_VER}-latest $EXTRA_TAGS; do 
+for T in ${TAG:+$TYPO3_VER-$TAG} ${1:+$TYPO3_VER-$1} ${EXTRA_TAG:+$1}; do 
     echo "*************** Tagging $TRAVIS_REPO_SLUG as $TRAVIS_REPO_SLUG:$T"
     docker tag $TRAVIS_REPO_SLUG $TRAVIS_REPO_SLUG:$T
 done
