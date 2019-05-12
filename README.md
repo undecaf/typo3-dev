@@ -52,7 +52,9 @@ File access rights, ownerships, UIDs and GIDs are transparently and consistently
 
 ### TL;DR (quick & dirty)
 
-To start a TYPO3 instance in a standalone container, do this:
+To start a TYPO3 instance in a standalone container, do this
+(or run
+[`docker-run.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/docker-run.sh)):
 
 ```bash
 $ docker run \
@@ -60,7 +62,6 @@ $ docker run \
     --rm \
     --name typo3 \
     --hostname dev.typo3.local \
-    --cap-add=SYS_ADMIN \
     --volume typo3-vol:/var/www/localhost \
     --publish 127.0.0.1:8080:80 \
     undecaf/typo3-dev
@@ -69,7 +70,8 @@ $ docker run \
 If you prefer
 [working rootless](https://de.slideshare.net/AkihiroSuda/rootless-containers)
 with [Podman](https://podman.io/) then substitute `podman` for `docker`,
-or simply set `alias docker=podman`.
+or simply set `alias docker=podman`, or use
+[`podman-run.sh`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/podman-run.sh).
 
 Next, browse to `http://localhost:8080`. This starts the TYPO3 installation wizard. 
 When asked to select a database, choose `Manually configured SQLite connection` and

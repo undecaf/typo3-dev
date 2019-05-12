@@ -17,7 +17,7 @@ apk add \
 	curl \
 	ca-certificates \
 	openssl \
-    libcap
+    rsync
 
 # Install Apache and PHP
 apk add \
