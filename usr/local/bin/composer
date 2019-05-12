@@ -1,2 +1,0 @@
-#!/bin/sh
-su apache -s /bin/sh -c "/usr/local/bin/composer.phar --working-dir=$TYPO3_ROOT \$*"
