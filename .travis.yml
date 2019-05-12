@@ -20,15 +20,18 @@ before_deploy:
 deploy:
   - provider: script
     script: .travis/push.sh
+    skip_cleanup: true
     on:
       branch: master
 
   - provider: script
     script: .travis/push.sh dev
+    skip_cleanup: true
     on:
       branch: dev
 
   - provider: script
     script: .travis/push.sh $TRAVIS_TAG
+    skip_cleanup: true
     on:
       tags: true
