@@ -189,9 +189,10 @@ defaults to `localhost`.
     `post_max_size=5M`. These settings override prior settings and `MODE`.
 
 -   `COMPOSER_EXCLUDE`: a colon-separated list of directory paths relative to
-    `/var/www/localhost` which are to be excluded from the effects of Composer
-    operations. This is intended e.g. to protect the current version of an extension
-    your are developing from being „updated“ to the version stored in a repository.
+    `/var/www/localhost` which are to be excluded from the effects of [Composer operations](#composer).  
+    This is intended e.g. to protect the current version of
+    an extension you are developing from being „updated“ to an older version stored in a repository.  
+    The directories need to exist only when Composer is invoked.
 
 `--hostname` and `--env` arguments can be given to any of the `podman-*` scripts.
 

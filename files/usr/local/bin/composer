@@ -1,26 +1,51 @@
 #!/bin/bash
 
-set -e
+#
+# Runs Composer as user $APACHE_USER and in working directory $TYPO3_ROOT.
+#
+# Beforehand, all directories listed in $COMPOSER_EXCLUDE_FILE are bind-mounted
+# somewehere else so that modifications in these directories do not appear at
+# the host in the volume mapped to $TYPO3_ROOT.
+#
+# Afterwards, these directories are unmounted, thus restoring their content
+# from the host.
+#
 
-if [ -f $COMPOSER_EXCLUDE_FILE ]; then
-    # Sub-mount protected directories, making sure that each sub-mounted directory is unmounted afterwards
-    . /etc/environment
+. /etc/environment
+
+RUN_COMPOSER=1
+
+if [ -f $COMPOSER_EXCLUDE_FILE ] && [ -n "$(cat $COMPOSER_EXCLUDE_FILE)" ]; then
     COMPOSER_EXCLUDE_ROOT=$APACHE_HOME/composer-exclude
-    TRAP_CMDS='set +e'
 
-    for D in $(cat $COMPOSER_EXCLUDE_FILE); do
-        if [ -n "$D" -a -d $TYPO3_ROOT/$D ]; then
-            mkdir -p $COMPOSER_EXCLUDE_ROOT/$D
-            chown ${APACHE_USER}. $COMPOSER_EXCLUDE_ROOT
-            mount --bind $TYPO3_ROOT/$D $COMPOSER_EXCLUDE_ROOT/$D
-            echo "Excluded $D"
-            TRAP_CMDS="${TRAP_CMDS}; umount $COMPOSER_EXCLUDE_ROOT/$D && echo 'Included '$D' again'"
-            trap "$TRAP_CMDS" EXIT
-        else
-            echo "Did not exclude $D: $TYPO3_ROOT/$D is not a directory in the container"
-        fi
-    done
+    # Sub-mount empty directories over the protected directories, 
+    # making sure that each sub-mounted directory is unmounted afterwards
+    set -e
+    TRAP_CMDS=
+
+    while IFS=':' read -ra DIRS; do
+        for D in "${DIRS[@]}"; do
+            if [ -n "$D" -a -d $TYPO3_ROOT/$D ]; then
+                mkdir -p $COMPOSER_EXCLUDE_ROOT/$D
+                chown $APACHE_USER: $COMPOSER_EXCLUDE_ROOT/$D
+                mount --bind $COMPOSER_EXCLUDE_ROOT/$D $TYPO3_ROOT/$D
+                echo "Excluding $D"
+                TRAP_CMDS="umount $TYPO3_ROOT/$D && rm -rf $COMPOSER_EXCLUDE_ROOT/$D && echo 'Restored '$D; $TRAP_CMDS"
+                trap "set +e; $TRAP_CMDS" EXIT
+
+            else
+                echo "Not excluding $D: no such directory in $TYPO3_ROOT" 1>&2
+                RUN_COMPOSER=
+            fi
+        done
+    done <<< "$(cat $COMPOSER_EXCLUDE_FILE)"
 fi
 
 # Run Composer in TYPO3 context
-su apache -s /bin/sh -l -c ". /etc/environment; /usr/local/bin/composer.phar --working-dir=\$TYPO3_ROOT $*"
+if [ -n "$RUN_COMPOSER" ]; then
+    su $APACHE_USER \
+        -s /bin/sh -l \
+        -c ". /etc/environment; /usr/local/bin/composer.phar --working-dir=\$TYPO3_ROOT $*"
+else
+    echo "Cannot comply with COMPOSER_EXCLUDE, Composer was not run" 1>&2
+fi
