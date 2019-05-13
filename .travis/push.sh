@@ -1,11 +1,11 @@
 #!/bin/bash
 
 for T in $(.travis/tags.sh); do 
-    echo "*************** Pushing $TRAVIS_REPO_SLUG:$T"
+    echo '*************** '"Pushing $TRAVIS_REPO_SLUG:$T"
     docker push $TRAVIS_REPO_SLUG:$T
 done
 
-echo "*************** Pushing README.md"
+echo '*************** Pushing README.md'
 docker run --rm \
     -v $(readlink -f README.md):/data/README.md \
     -e DOCKERHUB_USERNAME="$REGISTRY_USER" \
