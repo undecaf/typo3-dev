@@ -11,7 +11,7 @@ case "$TRAVIS_BRANCH" in
         TAGS="$TAGS $TYPO3_VER-$BRANCH ${VERY_LAST:+$BRANCH}"
         ;;
     *)
-        TAGS="$TAGS-$TRAVIS_BRANCH $TYPO3_VER-$TRAVIS_BRANCH"
+        TAGS="${TAGS:+$TAGS-$TRAVIS_BRANCH} $TYPO3_VER-$TRAVIS_BRANCH"
         ;;
 esac
 
