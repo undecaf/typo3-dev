@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for T in $(tags.sh); do 
+for T in $(.travis/tags.sh); do 
     echo "*************** Pushing $TRAVIS_REPO_SLUG:$T"
     docker push $TRAVIS_REPO_SLUG:$T
 done
