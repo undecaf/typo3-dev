@@ -6,32 +6,32 @@ services:
 env:
   matrix:
     - TYPO3_VER=8.7
-    - TYPO3_VER=9.5 EXTRA_TAG=true
+    - TYPO3_VER=9.5 VERY_LAST=true
 
 before_script:
   - docker pull $TRAVIS_REPO_SLUG || true
 
 script:
-  - .travis/build.sh $TRAVIS_TAG
+  - .travis/build.sh
 
 before_deploy:
   - docker login --username "$REGISTRY_USER" --password "$REGISTRY_PASS"
 
 deploy:
   - provider: script
-    script: .travis/push.sh latest
+    script: .travis/push.sh
     skip_cleanup: true
     on:
       branch: master
 
   - provider: script
-    script: .travis/push.sh dev
+    script: .travis/push.sh
     skip_cleanup: true
     on:
       branch: dev
 
   - provider: script
-    script: .travis/push.sh latest
+    script: .travis/push.sh
     skip_cleanup: true
     on:
       tags: true

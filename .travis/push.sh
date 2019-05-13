@@ -1,12 +1,6 @@
 #!/bin/bash
 
-# Usage: push.sh [EXTRA-TAG]
-
-# Use only MAJOR.MINOR of $TRAVIS_TAG
-RE='^([0-9]+\.[0-9]+)(\..+)?'
-[[ "$TRAVIS_TAG" =~ $RE ]] && TAG=${BASH_REMATCH[1]} || TAG=
-
-for T in ${TAG:+$TYPO3_VER-$TAG} ${1:+$TYPO3_VER-$1} ${EXTRA_TAG:+$1}; do 
+for T in $(tags.sh); do 
     echo "*************** Pushing $TRAVIS_REPO_SLUG:$T"
     docker push $TRAVIS_REPO_SLUG:$T
 done
