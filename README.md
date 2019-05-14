@@ -22,6 +22,9 @@ PHP and Composer do not need to be installed on the host.
 File access rights, ownerships, UIDs and GIDs are transparently and consistently
 [mapped between host and container](#preparation).
 
+## What you get
+
+![Parts of this project in a block diagram: containers for TYPO3 and database, browser and IDE](https://undecaf.github.io/typo3-dev/img/overview.png)
 
 ## Contents
 
@@ -359,7 +362,8 @@ lists recommended plugins for various browsers.
 
 Podman containers must be told the host IP in order for XDebug
 to connect back to your IDE. If you did not start TYPO3 with one
-of the scripts, your `podman run` command  must include this argument:
+of the `podman-*.sh` scripts, your `podman run` command  must 
+include this argument:
 
 ```bash
 --env HOST_IP=$(hostname -I | awk '{print $1}')

@@ -8,6 +8,9 @@
 # Use the same environment as during build
 . /etc/environment
 
+echo '*** '"TYPO3 ${TYPO3_VER}, container version: ${CONTAINER_VER}"' ***'
+php --version
+
 # Use specified timezone, if any
 if [ -n "$TIMEZONE" -a -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
 	cp /usr/share/zoneinfo/${TIMEZONE} /etc/localtime

@@ -1,6 +1,9 @@
 FROM alpine:3.9
 LABEL maintainer="Ferdinand Kasper <fkasper@modus-operandi.at>"
 
+ARG CONTAINER_VER=experimental
+ARG TYPO3_VER=9.5
+
 COPY files /
 RUN /usr/local/bin/build
 
