@@ -362,7 +362,8 @@ lists recommended plugins for various browsers.
 
 Podman containers must be told the host IP in order for XDebug
 to connect back to your IDE. If you did not start TYPO3 with one
-of the scripts, your `podman run` command  must include this argument:
+of the `podman-*.sh` scripts, your `podman run` command  must 
+include this argument:
 
 ```bash
 --env HOST_IP=$(hostname -I | awk '{print $1}')
