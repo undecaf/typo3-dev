@@ -20,7 +20,7 @@ if [ -f $COMPOSER_EXCLUDE_FILE ] && [ -n "$(cat $COMPOSER_EXCLUDE_FILE)" ]; then
 
     while IFS=':' read -ra DIRS; do
         for D in "${DIRS[@]}"; do
-            if [ -n "$D" -aq -d $TYPO3_ROOT/$D ]; then
+            if [ -n "$D" -a -d $TYPO3_ROOT/$D ]; then
                 SAVE_DIR=$(mktemp -d)
                 rsync -aq $TYPO3_ROOT/$D/ $SAVE_DIR/
                 echo "Excluded $D"
