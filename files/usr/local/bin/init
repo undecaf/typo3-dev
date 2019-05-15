@@ -96,8 +96,8 @@ if [ -f $COMPOSER_EXCLUDE_FILE ] && [ -n "$(cat $COMPOSER_EXCLUDE_FILE)" ]; then
     done <<< "$(cat $COMPOSER_EXCLUDE_FILE)"
 fi
 
-# Execute Dockerfile CMD or command line
+# Execute Dockerfile CMD or command line, passing signals from host into container
 echo "Executing '$@', PID = $$"
+[ $$ eq 1 ] && echo "Ctrl-C to stop container"
 
-# Pass host signals to command
 exec "$@"
