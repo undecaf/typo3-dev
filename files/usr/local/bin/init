@@ -98,4 +98,6 @@ fi
 
 # Execute Dockerfile CMD or command line
 echo "Executing '$@', PID = $$"
-$@
+
+# Pass host signals to command
+exec "$@"
