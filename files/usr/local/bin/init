@@ -8,7 +8,7 @@
 # Use the same environment as during build
 . /etc/environment
 
-echo '*** '"TYPO3 ${TYPO3_VER}, container version: ${CONTAINER_VER}"' ***'
+echo $'\n*** '"TYPO3 ${TYPO3_VER}, image version: ${IMAGE_VER}"$' ***\n'
 php --version
 
 # Use specified timezone, if any
@@ -98,6 +98,6 @@ fi
 
 # Execute Dockerfile CMD or command line, passing signals from host into container
 echo "Executing '$@', PID = $$"
-[ $$ -eq 1 ] && echo "Ctrl-C to stop container"
+[ $$ -eq 1 ] && echo "Ctrl-C to stop the container"
 
 exec "$@"

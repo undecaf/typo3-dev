@@ -4,7 +4,7 @@ docker build \
     --pull \
     --cache-from $TRAVIS_REPO_SLUG \
     --build-arg TYPO3_VER=$TYPO3_VER \
-    --build-arg CONTAINER_VER=$2 \
+    --build-arg IMAGE_VER=${TRAVIS_TAG:-latest} \
     --tag $TRAVIS_REPO_SLUG \
     .
 
