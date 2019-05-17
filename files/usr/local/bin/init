@@ -11,10 +11,16 @@
 echo $'\n*** '"TYPO3 ${TYPO3_VER}, image version: ${IMAGE_VER}"$' ***\n'
 php --version
 
-# Use specified timezone, if any
-if [ -n "$TIMEZONE" -a -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
-	cp /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
-	echo "Timezone: $TIMEZONE"
+# Set the timezone only on startup (but not on restart)
+if [ $$ -eq 1 ]; then
+    # Try to determine the local timezone if none was specified
+    [ -z "$TIMEZONE" ] && TIMEZONE="$(curl https://ipapi.co/timezone)"
+
+    # Use timezone if specified and supported
+    if [ -n "$TIMEZONE" -a -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
+        cp /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
+        echo "Timezone: $TIMEZONE"
+    fi
 fi
 
 # Set up developer/XDebug/production mode
