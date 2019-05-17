@@ -3,7 +3,7 @@
 #
 # Provides commonly used functions and environment variables.
 #
-# Usage: source utils.sh $@ (pass the caller's command line arguments)
+# Usage: source _args.sh $@ (pass the caller's command line arguments)
 #
 
 
@@ -50,12 +50,21 @@ TYPO3_ROOT=/var/www/localhost
 TAG=${TYPO3DEV_TAG:-latest}
 ENGINE=${TYPO3DEV_ENGINE:-$(which podman)} || ENGINE=docker
 NAME=${TYPO3DEV_NAME:-typo3}
-PUBLISH=${TYPO3DEV_PUBLISH:-127.0.0.1:8080}
-VOLUME=${TYPO3DEV_VOLUME:-typo3-vol}
+T3_VOL=${TYPO3DEV_ROOT:-typo3-vol}
+DB_TYPE=
+DB_VOL=
 
 # Process command line options (only ALLOWED_OPTS if this variable exists)
-while getopts :${ALLOWED_OPTS:-e:n:p:t:v:}h- OPT; do
+while getopts :${ALLOWED_OPTS:-d:e:n:t:v:w:}h- OPT; do
     case "$OPT" in
+        # Database type
+        d)
+            DB_TYPE=
+            [ "$OPTARG" = m ] && DB_TYPE=mariadb
+            [ "$OPTARG" = p ] && DB_TYPE=postgresql
+            [ -z "$DB_TYPE" ] && usage "Unknown database type: '$OPTARG'"
+            ;;
+
         # Container engine
         e)
             ENGINE=$OPTARG  # basename or absolute path of an executable
@@ -66,23 +75,23 @@ while getopts :${ALLOWED_OPTS:-e:n:p:t:v:}h- OPT; do
             NAME=$OPTARG
             ;;
 
-        # TYPO3 interface and port
-        p)
-            PUBLISH=$OPTARG  # [interface:]port
-            RE='^(([0-9]+\.){3}[0-9]+:)?[0-9]+$'
-            [[ "$PUBLISH" =~ $RE ]] || usage "Invalid port to publish at: '$PUBLISH'"
-            ;;
-
         # Image tag
         t)
             TAG=$OPTARG
             ;;
 
-        # TYPO3 volume
-        v)
-            VOLUME=$OPTARG  # volume name or absolute path
+        # TYPO3 or database volume (volume name or absolute path)
+        v|w)
             RE='^/.+'
-            [[ "$VOLUME" =~ $RE ]] && [ ! -d "$VOLUME" ] && usage "Volume directory '$VOLUME' not found"
+            [[ "$OPTARG" =~ $RE ]] && [ ! -d "$OPTARG" ] && usage "Directory '$OPTARG' given for volume but not found"
+            case $OPT in
+                v)
+                    T3_VOL=$OPTARG
+                    ;;
+                w)
+                    DB_VOL=$OPTARG
+                    ;;
+            esac
             ;;
 
         # Help
@@ -110,6 +119,14 @@ shift $((OPTIND-1))
 
 ENGINE=$(which $ENGINE)
 ENGINE_NAME=$(basename $ENGINE)
+
+# Validate database type if database volume was specified
+[ -n "$DB_VOL" ] && [ -z "$DB_TYPE" ] && usage "Database type is missing"
+
+# Eventually set a default value for the database volume
+if [ -n "$DB_TYPE" -a -z "$DB_VOL" ]; then
+    DB_VOL=${TYPO3DEV_DB:-${DB_TYPE}-vol}
+fi
 
 # Settings that differ between container engines
 case $ENGINE_NAME in

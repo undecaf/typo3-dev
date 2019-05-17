@@ -2,12 +2,12 @@
 
 USAGE=$(cat <<-EOF
 
-Mounts a container volume at a host mount point and makes container
-files and directories appear to be owned by the current user.
-
 Usage:
   $(basename $0) [-e engine] [-v volume] MOUNT-POINT
   $(basename $0) -h
+
+Mounts a container volume at a host mount point and makes container
+files and directories appear to be owned by the current user.
 
 At least the parent directory of MOUNT-POINT must exist, and MOUNT-POINT
 must be an empty directory.
@@ -25,7 +25,15 @@ EOF
 
 ALLOWED_OPTS=e:v:
 
-. $(dirname $0)/utils.sh
+. $(dirname $0)/_args.sh
+
+# Get the volume mount point
+VOL_DIR=$($ENGINE volume inspect --format "$MP_FORMAT" $T3_VOL) \
+    || usage "Volume '$T3_VOL' not found"
+
+# Determine UID and GID of the volume owner
+VOL_UID=$($SUDO_PREFIX stat --format '%u' $VOL_DIR)
+VOL_GID=$($SUDO_PREFIX stat --format '%g' $VOL_DIR)
 
 # At least the parent directory of the mount directory must exist
 MAPPED_DIR=$(readlink -f "$1")
@@ -38,17 +46,9 @@ mkdir -p "$MAPPED_DIR"
 # Mount directory not empty?
 [ -n "$(ls -A "$MAPPED_DIR")" ] && usage "$MAPPED_DIR is not empty"
 
-# Get the volume mount point
-VOL_DIR=$($ENGINE volume inspect --format "$MP_FORMAT" $VOLUME) \
-    || usage "Volume '$VOLUME' not found"
-
-# Determine UID and GID of the volume owner
-VOL_UID=$($SUDO_PREFIX stat --format '%u' $VOL_DIR)
-VOL_GID=$($SUDO_PREFIX stat --format '%g' $VOL_DIR)
-
 sudo bindfs \
     --map=$VOL_UID/$(id -u):@$VOL_GID/@$(id -g) \
     $VOL_DIR \
     "$MAPPED_DIR"
 
-echo "Volume '$VOLUME' now mounted at directory $MAPPED_DIR"
+echo "Volume '$T3_VOL' mounted at directory $MAPPED_DIR"

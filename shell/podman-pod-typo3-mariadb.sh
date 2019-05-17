@@ -10,6 +10,7 @@ podman pod create \
 # Starts the MariaDB container in the pod
 podman run \
     --detach \
+    --rm \
     --name mariadb \
     --pod typo3-pod \
     --env MARIADB_DATABASE=t3 \
@@ -22,12 +23,12 @@ podman run \
 # Starts the TYPO3 container in the pod
 podman run \
     --detach \
+    --rm \
     --name typo3 \
     --pod typo3-pod \
     --hostname dev.typo3.local \
     --env HOST_IP=$(hostname -I | awk '{print $1}') \
     --volume typo3-vol:/var/www/localhost \
-    --stop-timeout 2 \
     $@ \
     undecaf/typo3-dev
     
