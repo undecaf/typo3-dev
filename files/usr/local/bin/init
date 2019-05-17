@@ -14,12 +14,14 @@ php --version
 # Set the timezone only on startup (but not on restart)
 if [ $$ -eq 1 ]; then
     # Try to determine the local timezone if none was specified
-    [ -z "$TIMEZONE" ] && TIMEZONE="$(curl https://ipapi.co/timezone)"
+    [ -z "$TIMEZONE" ] && TIMEZONE="$(curl -s https://ipapi.co/timezone)"
 
     # Use timezone if specified and supported
     if [ -n "$TIMEZONE" -a -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
         cp /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
         echo "Timezone: $TIMEZONE"
+    else
+        echo "Timezone: UTC"
     fi
 fi
 
