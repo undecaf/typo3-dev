@@ -1,5 +1,9 @@
 #!/bin/bash
 
+echo '*************** '"TYPO3_VER: '$TYPO3_VER'"
+echo '*************** '"TRAVIS_TAG: '$TRAVIS_TAG'"
+echo '*************** '"IMAGE_VER: '${TRAVIS_TAG:-latest}'"
+
 docker build \
     --pull \
     --cache-from $TRAVIS_REPO_SLUG \
