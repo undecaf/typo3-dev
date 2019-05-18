@@ -8,10 +8,13 @@
 # Use the same environment as during build
 . /etc/environment
 
-echo $'\n*** '"TYPO3 ${TYPO3_VER}, image version: ${IMAGE_VER}"$' ***\n'
+# Show version info
+TYPO3_VER=$(jq --raw-output '[.packages|.[]|{(.name): .version}]|add|."typo3/cms-core"' $TYPO3_ROOT/composer.lock)
+echo $'\n*** '"TYPO3 ${TYPO3_VER}, container image: ${IMAGE_VER}"$' ***\n'
 php --version
+echo
 
-# Set the timezone only on startup (but not on restart)
+# Things to do only on startup (but not on t3env)
 if [ $$ -eq 1 ]; then
     # Try to determine the local timezone if none was specified
     [ -z "$TIMEZONE" ] && TIMEZONE="$(curl -s https://ipapi.co/timezone)"
@@ -23,6 +26,9 @@ if [ $$ -eq 1 ]; then
     else
         echo "Timezone: UTC"
     fi
+
+    # Clean up Apache PID files
+    rm -f /run/apache2/apache2.pid /run/apache2/httpd.pid
 fi
 
 # Set up developer/XDebug/production mode
@@ -85,9 +91,6 @@ fi
 
 # root created missing paths for volumes also in $APACHE_HOME, therefore:
 chown -R $APACHE_USER: $APACHE_HOME 
-
-# Clean up Apache PID files only if this is the initial process
-[ $$ -eq 1 ] && rm -f /run/apache2/apache2.pid /run/apache2/httpd.pid
 
 # Save/update the list of directories to be excluded from Composer operations
 # only if $COMPOSER_EXCLUDE has been set to any (even an empty) value
