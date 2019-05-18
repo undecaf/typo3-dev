@@ -3,8 +3,8 @@
 USAGE=$(cat <<-EOF
 
 Usage:
-  $(basename $0) [-e engine] [-v volume] MOUNT-POINT
-  $(basename $0) -h
+  $(basename $0) [option]... MOUNT-POINT
+  $(basename $0) [-h|--help]
 
 Mounts a container volume at a host mount point and makes container
 files and directories appear to be owned by the current user.
@@ -13,17 +13,20 @@ At least the parent directory of MOUNT-POINT must exist, and MOUNT-POINT
 must be an empty directory.
 
 Options (default values can be overridden by environment variables):
-  -e engine     Container engine to use: 'docker', 'podman' or an absolute path to the
+  --engine ENGINE,
+  -e ENGINE     Container engine to use: 'docker', 'podman' or an absolute path to the
                 engine executable. 
                 Default: TYPO3DEV_ENGINE, or 'podman' if installed, else 'docker'.
-  -v volume     Volume name or absolute directory path mapped to the TYPO3 root
+  --typo3-vol TYPO3_VOL,              
+  -v TYPO3_VOL  Volume name or absolute directory path mapped to the TYPO3 root 
                 directory in the container. Default: TYPO3DEV_VOLUME, or 'typo3-vol'.
+  --help,
   -h            Displays this text and exits.
  
 EOF
 )
 
-ALLOWED_OPTS=e:v:
+ALLOWED_OPTS='-e|--engine|-v|--typo3-vol'
 
 . $(dirname $0)/_args.sh
 

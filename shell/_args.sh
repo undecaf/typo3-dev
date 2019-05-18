@@ -54,68 +54,76 @@ T3_VOL=${TYPO3DEV_ROOT:-typo3-vol}
 DB_TYPE=
 DB_VOL=
 
-# Process command line options (only ALLOWED_OPTS if this variable exists)
-while getopts :${ALLOWED_OPTS:-d:e:n:t:v:w:}h- OPT; do
-    case "$OPT" in
+# Process command line options
+while [[ $# -gt 0 ]]; do
+    # Check for allowed options if regular expression ALLOWED_OPTS exists
+    [ -n "$ALLOWED_OPTS" ] && ! [[ "$1" =~ $ALLOWED_OPTS ]] && break
+
+    case "$1" in
         # Database type
-        d)
+        -d|--database)
             DB_TYPE=
-            [ "$OPTARG" = m ] && DB_TYPE=mariadb
-            [ "$OPTARG" = p ] && DB_TYPE=postgresql
-            [ -z "$DB_TYPE" ] && usage "Unknown database type: '$OPTARG'"
+            [ "$2" = m ] && DB_TYPE=mariadb
+            [ "$2" = p ] && DB_TYPE=postgresql
+            [ -z "$DB_TYPE" ] && usage "Unknown database type: '$2'"
+            shift 2
             ;;
 
         # Container engine
-        e)
-            ENGINE=$OPTARG  # basename or absolute path of an executable
+        -e|--engine)
+            ENGINE=$2  # basename or absolute path of an executable
+            shift 2
             ;;
 
         # Container name
-        n)
-            NAME=$OPTARG
+        -n|--name)
+            NAME="$2"
+            shift 2
             ;;
 
         # Image tag
-        t)
-            TAG=$OPTARG
+        -t|--tag)
+            TAG=$2
+            shift 2
             ;;
 
         # TYPO3 or database volume (volume name or absolute path)
-        v|w)
+        -v|--typo3-vol|-w|--db-vol)
             RE='^/.+'
-            [[ "$OPTARG" =~ $RE ]] && [ ! -d "$OPTARG" ] && usage "Directory '$OPTARG' given for volume but not found"
-            case $OPT in
-                v)
-                    T3_VOL=$OPTARG
+            [[ "$2" =~ $RE ]] && [ ! -d "$2" ] && usage "Volume directory '$2' not found"
+
+            case $1 in
+                -v|--typo3-vol)
+                    T3_VOL=$2
                     ;;
-                w)
-                    DB_VOL=$OPTARG
+                -w|--db-vol)
+                    DB_VOL=$2
                     ;;
             esac
+            shift 2
             ;;
 
         # Help
-        h)
+        -h|--help)
             usage
+            shift
             ;;
 
-        # First long option to be passed through to the engine
-        -)
+        # Separator between t3run and Docker options
+        --)
+            shift
             break
             ;;
 
-        # First short option to be passed through to the engine
-        \?)
-            OPTIND=$((OPTIND-1))  # prevent this option from being skipped
+        # First option to be passed through to the container engine
+        *)
             break
             ;;
     esac
 done
 
-shift $((OPTIND-1))
-
-# Validate container engine option
-[ -x "$(which $ENGINE)" ] || usage "Container engine '$ENGINE' not found or not excutable"
+# Determine container engine name
+[ -x "$(which $ENGINE)" ] || usage "Container engine '$ENGINE' not found"
 
 ENGINE=$(which $ENGINE)
 ENGINE_NAME=$(basename $ENGINE)
@@ -128,12 +136,11 @@ if [ -n "$DB_TYPE" -a -z "$DB_VOL" ]; then
     DB_VOL=${TYPO3DEV_DB:-${DB_TYPE}-vol}
 fi
 
-# Settings that differ between container engines
+# Options that differ between container engines
 case $ENGINE_NAME in
     docker)
         HOST_IP_ENV=
         HOST_IP_OPT=
-        REMOVE_OPT=--rm
         MP_FORMAT='{{.Mountpoint}}'
         SUDO_PREFIX=sudo
         ;;
@@ -141,7 +148,6 @@ case $ENGINE_NAME in
     podman)
         HOST_IP_ENV="HOST_IP=$(hostname -I | awk '{print $1}')"
         HOST_IP_OPT="--env $HOST_IP_ENV"
-        REMOVE_OPT=  # temporary workaround until #3071 fixed
         MP_FORMAT='{{.MountPoint}}'
         SUDO_PREFIX=
         ;;

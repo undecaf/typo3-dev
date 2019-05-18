@@ -3,8 +3,8 @@
 USAGE=$(cat <<-EOF
 
 Usage:
-  $(basename $0) [-e engine] [-n name] [-p [ip:]port] [-t t3-build] [-v volume] [--] [Docker/Podman option]...
-  $(basename $0) -h
+  $(basename $0) [option]... [--] [Docker/Podman option]...
+  $(basename $0) [-h|--help]
 
 Runs the undecaf/typo3-dev TYPO3 container in Docker or Podman.
 
@@ -12,22 +12,29 @@ Although  all options are optional, at least one option must be set ('--' is suf
 as a precaution against inadvertent command invocation.
 
 Options (default values can be overridden by environment variables):
-  -e engine     Container engine to use: 'docker', 'podman' or an absolute path to the
+  --engine ENGINE,
+  -e ENGINE     Container engine to use: 'docker', 'podman' or an absolute path to the
                 engine executable. 
                 Default: TYPO3DEV_ENGINE, or 'podman' if installed, else 'docker'.
-  -n name       Container or pod name to assign. Default: TYPO3DEV_NAME, or 'typo3'.
-  -t t3-build   Tag of image to run, consisting of TYPO3 version and build version,
+  --name NAME,
+  -n NAME       Container or pod name to assign. Default: TYPO3DEV_NAME, or 'typo3'.
+  --tag TAG,
+  -t TAG        Tag of image to run, consisting of TYPO3 version and build version,
                 e.g. '8.7-1.3' or '9.5-latest'.
                 Default: TYPO3DEV_TAG, or 'latest', i.e. the latest build for the most
                 recent TYPO3 version.
-  -v typo3-vol  Volume name or absolute directory path to be mapped to the TYPO3 root 
+  --typo3-vol TYPO3_VOL,              
+  -v TYPO3_VOL  Volume name or absolute directory path to be mapped to the TYPO3 root 
                 directory inside the container. Default: TYPO3DEV_ROOT, or 'typo3-vol'.
-  -d db-type    Type of database container: 'm' for MariaDB, 'p' for PostgreSQL.
+  --database TYPE,
+  -d TYPE       Type of database container: 'm' for MariaDB, 'p' for PostgreSQL.
                 If omitted, the SQLite instance in the TYPO3 container will be used.
-  -w db-vol     Volume name or absolute directory path to be mapped to the database data
+  --db-vol DB_VOL,
+  -w DB_VOL     Volume name or absolute directory path to be mapped to the database data
                 directory inside the database container; requires -d.
                 Defaults: TYPO3DEV_MARIADB, or 'typo3-mariadb' for MariaDB,
                 TYPO3DEV_POSTGRESQL, or 'typo3-postgresql' for PostgreSQL.
+  --help,
   -h            Displays this text and exits.
 
 Additional options for the Docker/Podman 'run' command can be added after the options
@@ -40,17 +47,19 @@ OPT_COUNT=$#
 
 . $(dirname $0)/_args.sh
 
-[ $OPT_COUNT -eq 0 ] && usage 'No option set but at least one is required'
+[ $OPT_COUNT -eq 0 ] && usage 'No option was found but at least one is required'
 
 trap "{ set +x; } 2>/dev/null; echo $'\nContainer $NAME stopped'" SIGINT
+
+HOSTNAME="typo3.$(hostname)"
+
 set -x
 
 $ENGINE run \
-    --name $NAME \
-    --hostname "typo3.$(hostname)" \
+    --name "$NAME" \
+    --hostname "$HOSTNAME" \
     --volume $T3_VOL:$TYPO3_ROOT \
     --publish 127.0.0.1:8080:80 \
-    $REMOVE_OPT \
     $HOST_IP_OPT \
     $@ \
     $REPO_SLUG${TAG:+:$TAG}

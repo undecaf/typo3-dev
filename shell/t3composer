@@ -3,22 +3,25 @@
 USAGE=$(cat <<-EOF
 
 Usage:
-  $(basename $0) [-e engine] [-n name] [Composer arg]...
-  $(basename $0) -h
+  $(basename $0) [option]... [Composer option]...
+  $(basename $0) [-h|--help]
 
 Runs Composer in a TYPO3 container running in Docker or Podman.
 
 Options (default values can be overridden by environment variables):
-  -e engine     Container engine to use: 'docker', 'podman' or an absolute path to the
+  --engine ENGINE,
+  -e ENGINE     Container engine to use: 'docker', 'podman' or an absolute path to the
                 engine executable. 
                 Default: TYPO3DEV_ENGINE, or 'podman' if installed, else 'docker'.
-  -n name       Container name. Default: TYPO3DEV_NAME, or 'typo3'.
+  --name NAME,
+  -n NAME       Container or pod name. Default: TYPO3DEV_NAME, or 'typo3'.
+  --help,
   -h            Displays this text and exits.
  
 EOF
 )
 
-ALLOWED_OPTS=e:n:
+ALLOWED_OPTS='-e|--engine|-n|--name'
 
 . $(dirname $0)/utils.sh
 
