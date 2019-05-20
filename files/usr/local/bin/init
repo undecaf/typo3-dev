@@ -9,7 +9,7 @@
 . /etc/environment
 
 # Show version info
-TYPO3_VER=$(jq --raw-output '[.packages|.[]|{(.name): .version}]|add|."typo3/cms-core"' $TYPO3_ROOT/composer.lock)
+TYPO3_VER=$(jq --raw-output '[.packages|.[]|{(.name): .version}]|add|."typo3/cms-core"' $TYPO3_ROOT/composer.lock 2>/dev/null)
 echo $'\n*** '"TYPO3 ${TYPO3_VER}, container image: ${IMAGE_VER}"$' ***\n'
 php --version
 echo
@@ -109,6 +109,9 @@ fi
 
 # Execute Dockerfile CMD or command line, passing signals from host into container
 echo "Executing '$@', PID = $$"
-[ $$ -eq 1 ] && echo "Ctrl-C to stop the container"
+if [ $$ -eq 1 ]; then
+    echo "Ctrl-C to stop the container"
+    trap "echo 'Container stopped'" EXIT
+fi
 
 exec "$@"
