@@ -11,4 +11,4 @@ echo "Starting Apache, PID=$$, user=$APACHE_USER"
 exec su $APACHE_USER \
         -s /bin/sh \
         -l \
-        -c "httpd -D FOREGROUND"
+        -c ". /etc/environment; httpd -D FOREGROUND"
