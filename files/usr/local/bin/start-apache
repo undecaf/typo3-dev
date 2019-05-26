@@ -1,0 +1,14 @@
+#!/bin/sh
+
+#
+# Runs Apache as $APACHE_USER even if this script was executed by root.
+#
+
+. /etc/environment
+
+echo "Starting Apache, PID=$$, user=$APACHE_USER"
+
+exec su $APACHE_USER \
+        -s /bin/sh \
+        -l \
+        -c "httpd -D FOREGROUND"

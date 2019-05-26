@@ -108,10 +108,4 @@ if [ -f $COMPOSER_EXCLUDE_FILE ] && [ -n "$(cat $COMPOSER_EXCLUDE_FILE)" ]; then
 fi
 
 # Execute Dockerfile CMD or command line, passing signals from host into container
-echo "Executing '$@', PID = $$"
-if [ $$ -eq 1 ]; then
-    echo "Ctrl-C to stop the container"
-    trap "echo 'Container stopped'" EXIT
-fi
-
 exec "$@"
