@@ -12,5 +12,5 @@ VOLUME /var/www/localhost
 EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/init"]
-CMD ["/usr/local/bin/start-apache"]
+CMD ["httpd", "-D", "FOREGROUND"]
 STOPSIGNAL SIGHUP
