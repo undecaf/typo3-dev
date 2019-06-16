@@ -1,0 +1,865 @@
+#!/bin/bash
+
+#
+# Controls execution and configuration of TYPO3 in a container
+# ============================================================
+#
+# For help, run this script without any arguments.
+#
+# Copyright F. Kasper <fkasper@modus-operandi.at> 2019
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+# Constants
+REPO_SLUG=undecaf/typo3-dev
+T3_ROOTDIR=/var/www/localhost
+MARIADB_DATADIR=/bitnami/mariadb
+POSTGRESQL_DATADIR=/bitnami/postgresql
+
+
+# --------------------------------------------------------------------------
+
+# Prints $USAGE and an optional error message to stdout or stderr
+# and exits with exit code 0 or 1, respectively.
+#
+# Arguments:
+#   $1  (optional) error message: if specified then it is printed, and all
+#       output is sent to stderr; otherwise $USAGE goes to stdout.
+#
+# Environment:
+#   $USAGE usage information; how to preserve linefeeds in $USAGE:
+#       USAGE=$(cat <<EOT
+#           ... multiline text ...
+#       EOT
+#       )
+#
+usage() {
+    local SCRIPT=$(basename $0)
+    local REDIR=
+    local EXIT_CODE=0
+
+    if [ -n "$1" ]; then
+        cat >&2 <<- EOT
+
+*** $1 ***
+EOT
+        REDIR=">&2"
+        EXIT_CODE=1
+    fi
+
+    eval 'echo "$USAGE" '$REDIR
+    exit $EXIT_CODE
+}
+
+
+# --------------------------------------------------------------------------
+
+# Returns exit code 0 if the argument starts with an '/'.
+#
+# Arguments:
+#   $1  string to test for an absolute path
+#
+is_absolute() {
+    local RE
+    RE='^/.+'
+    [[ "$1" =~ $RE ]]
+}
+
+
+# --------------------------------------------------------------------------
+
+# If the argument is an absolute path, verify that at least the parent exists
+# and that it is an empty directory.
+#
+# Arguments:
+#   $1  absolute path of a directory to bind-mount, or a volume name
+#
+# Calls:
+#   is_absolute
+#
+verify_dir() {
+    if is_absolute "$1"; then
+        # At least the parent directory must exist
+        readlink -f "$1" &>/dev/null || usage "Bind-mount directory '$1' does not have a parent"
+
+        # Mount point must be an empty directory
+        [ -n "$(ls -A "$1" 2>/dev/null)" ] && usage "Bind-mount path '$1' is not an empty directory"
+    fi
+}
+
+
+# --------------------------------------------------------------------------
+
+# Autocompletes a string and echoes it to stdout. Echoes the original
+# string if autocompletion could not be achieved.
+#
+# Arguments:
+#   $1  string to autocomplete
+#   $2, $3, ...
+#       autocompleted strings
+#
+autocomplete() {
+    local ARG="$1"
+    shift
+    for AC in $@; do
+        if [ "${AC##$ARG}" != "$AC" ]; then
+            echo "$AC"
+            return
+        fi
+    done
+
+    echo "$ARG"
+}
+
+
+# --------------------------------------------------------------------------
+
+# Bind-mounts a directory to a container volume so that files and directories
+# of that volume appear to be owned by the current user.
+# Does nothing if no absolute directory path was given.
+#
+# Arguments:
+#   $1  name of container volume
+#   $2  (absolute) directory path
+#
+# Environment:
+#   $T3_ENGINE
+#   $MP_FORMAT
+#   $SUDO_PREFIX
+#
+# Calls:
+#   is_absolute
+#
+mount_volume() {
+    if is_absolute "$2"; then
+        if ! which bindfs &>/dev/null; then
+            unset USAGE
+            usage "bindfs not installed, see https://bindfs.org/ for information"
+        fi
+
+        local BIND_MP
+        local VOL_MP
+        local VOL_UID
+        local VOL_GID
+
+        # Locate the volume mount point of the container engine
+        VOL_MP=$($T3_ENGINE volume inspect --format "$MP_FORMAT" "$1") \
+            || usage "Volume '$1' not found"
+
+        # Acquire sudo authorization for what follows
+        sudo --prompt "sudo authorization is required for bind-mounting: " --validate
+
+        # Determine UID and GID of the volume owner
+        VOL_UID=$($SUDO_PREFIX stat --format '%u' $VOL_MP)
+        VOL_GID=$($SUDO_PREFIX stat --format '%g' $VOL_MP)
+
+        # Create the directory if necessary
+        BIND_MP=$(readlink --canonicalize "$2")
+        mkdir -p "$BIND_MP"
+
+        sudo bindfs \
+            --map=$VOL_UID/$(id -u):@$VOL_GID/@$(id -g) \
+            $VOL_MP \
+            "$BIND_MP" \
+        && echo "Directory '$BIND_MP' bind-mounted to volume '$1'"
+    fi
+}
+
+
+# --------------------------------------------------------------------------
+
+# Unmounts whatever may be bind-mounted to a container volume mount point.
+# Does nothing if nothing is mounted there.
+#
+# Arguments:
+#   $1  name of container volume
+#
+# Environment:
+#   $T3_ENGINE
+#   $MP_FORMAT
+#
+unmount_volume() {
+    # Find the container volume mountpoint
+    local VOL_MP
+    local BIND_MP
+
+    VOL_MP=$($T3_ENGINE volume inspect "$1" \
+        --format='{{if eq .Name "'$1'"}}'$MP_FORMAT'{{end}}')
+    # {{- ...}} and {{... -}} do no work here, therefore:
+    VOL_MP=$(echo $VOL_MP)
+
+    # Find the directory bind-mounted at the container volume mountpoint
+    BIND_MP=$(mount | grep --fixed-strings "$VOL_MP on " 2>/dev/null | cut -d ' ' -f 3)
+
+    if [ -n "$BIND_MP" ]; then
+        sudo --prompt 'sudo authorization is required for unmounting: ' \
+            umount "$BIND_MP" \
+        && echo "Directory '$BIND_MP' unmounted from volume '$1'"    
+    fi
+}
+
+
+# --------------------------------------------------------------------------
+
+# Stops a container if possible and logs this to stdout. Also logs if the
+# container was removed after being stopped. Will remove the container if
+# $REMOVE_STOPPED is set to anything non-empty.
+#
+# Arguments:
+#   $1  container name
+#
+# Environment:
+#   $T3_ENGINE
+#   $REMOVE_STOPPED
+#
+stop_container() {
+    if $T3_ENGINE stop "$1" &>/dev/null && echo "Container '$1' stopped"; then
+        # Remove the container(s) if so requested
+        test -n "$REMOVE_STOPPED" && $T3_ENGINE container rm "$1" >/dev/null
+
+        # Wait until the container was removed eventually
+        sleep 1
+        $T3_ENGINE container inspect "$1" &>/dev/null || echo "Container '$1' removed"
+    fi
+}
+
+
+# --------------------------------------------------------------------------
+
+# Determine command
+
+[ -n "$1" ] && MSG="Unknown command: '$1'" || MSG="Missing command"
+
+case "$1" in
+
+    # Run TYPO3 in a container, optionally with a database in an extra container
+    run)
+        USAGE=$(cat <<EOT
+
+Usage:
+  $(basename $0) run [option]... [--] [Docker/Podman option]...
+  $(basename $0) run [-h|--help]
+
+Runs the undecaf/typo3-dev TYPO3 container in detached mode in Docker or Podman.
+
+Although  all options are optional, at least one option must be set
+('--' is sufficient) as a precaution against inadvertent command invocation.
+
+Options (default values can be overridden by environment variables):
+
+  --engine=T3_ENGINE, -e T3_ENGINE
+      Container engine to use: 'docker', 'podman' (can be abbreviated) or an 
+      absolute path to the engine executable.
+      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+
+  --name=NAME, -n NAME
+      Container or pod name to assign. Default: T3_NAME, or 'typo3'.
+
+  --tag=TAG, -t TAG
+      Tag of image to run, consisting of TYPO3 version and build version,
+      e.g. '8.7-1.3' or '9.5-latest'.
+      Default: T3_TAG, or 'latest', i.e. the latest build for the most recent
+      TYPO3 version.
+
+  --typo3-vol=VOLUME, -v VOLUME
+      Volume name to be mapped to the TYPO3 root directory inside the container.
+      If an absolute path of a directory is specified, its basename is used as name
+      of the volume; in addition, that directory is bind-mounted at the volume so 
+      that files and directories in that volume  appear to be owned by the current
+      user.
+      Default: T3_ROOT, or 'typo3-vol'.
+
+  --typo3-port=PORT, -p PORT
+      Interface (optional) and port where to publish the TYPO3 HTTP port.
+      Default: T3_PORT, or '127.0.0.1:8080'.
+
+  --db-type=TYPE, -d TYPE
+      Type of database container: 'mariadb' for MariaDB, 'postgresql' for PostgreSQL
+      (can be abbreviated). If omitted or empty then the SQLite instance of the
+      TYPO3 container will be used.
+
+  --db-vol=VOLUME, -w VOLUME
+      Database volume name or absolute directory path as described for '--typo3-vol';
+      requires option '--db-type'.
+      Defaults: T3_MARIA_DATA, or 'mariadb-data' for MariaDB,
+                T3_PG_DATA, or 'postgresql-data' for PostgreSQL.
+
+  --db-port=PORT, -q PORT
+      Interface (optional) and port where to publish the database port;
+      requires option '--db-type'.
+      Defaults: T3_MARIA_PORT, or '127.0.0.1:3306' for MariaDB,
+                T3_PG_PORT, or '127.0.0.1:5432' for PostgreSQL.
+
+  --help, -h
+      Displays this text and exits.
+
+Additional options for the Docker/Podman 'run' command can be added after the options
+described above. If necessary, '--' can be used to separate them from the $(basename $0) options.
+ 
+EOT
+        )
+        ALLOWED_OPTS='-d|--db-type(=.*)?|-e|--engine(=.+)?|-n|--name(=.+)?|-t|--tag(=.+)?|-v|--typo3-root(=.+)?|-w|--db-data(=.+)?|-p|--typo3-port(=.+)?|-q|--db-port(=.+)?|-h|--help'
+        ;;
+
+
+    # Stop and remove a running TYPO3 (and the respective database) container
+    stop)
+        USAGE=$(cat <<EOT
+
+Usage:
+  $(basename $0) stop [option]...
+  $(basename $0) stop [-h|--help]
+
+Stops and removes a TYPO3 (and the respective database) container running in Docker or Podman.
+
+Options (default values can be overridden by environment variables):
+
+  --engine=ENGINE, -e ENGINE
+      Container engine being used: 'docker', 'podman' or an absolute path
+      to the engine executable.
+      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+
+  --name=NAME, -n NAME
+      Container or pod name. Default: T3_NAME, or 'typo3'.
+
+  --help, -h
+      Displays this text and exits.
+ 
+EOT
+        )
+        ALLOWED_OPTS='-e|--engine(=.+)?|-n|--name(=.+)?|--rm|-h|--help'
+        ;;
+
+
+    # Change environment settings in a running container
+    env)
+        USAGE=$(cat <<EOT
+
+Usage:
+  $(basename $0) env [option]... [VAR=value]...
+  $(basename $0) env [-h|--help]
+
+Modifies the environment of a TYPO3 container running in Docker or Podman.
+
+Options (default values can be overridden by environment variables):
+
+  --engine=ENGINE, -e ENGINE
+      Container engine being used: 'docker', 'podman' or an absolute path
+      to the engine executable.
+      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+
+  --name=NAME, -n NAME
+      Container or pod name. Default: T3_NAME, or 'typo3'.
+
+  --help, -h
+      Displays this text and exits.
+ 
+EOT
+        )
+        ALLOWED_OPTS='-e|--engine(=.+)?|-n|--name(=.+)?|-h|--help'
+        ;;
+
+
+    # Run Composer in a running container
+    composer)
+        USAGE=$(cat <<EOT
+
+Usage:
+  $(basename $0) composer [option]... [Composer option]...
+  $(basename $0) composer [-h|--help]
+
+Runs Composer in a TYPO3 container running in Docker or Podman.
+
+Options (default values can be overridden by environment variables):
+
+  --engine=ENGINE, -e ENGINE
+      Container engine being used: 'docker', 'podman' or an absolute path
+      to the engine executable.
+      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+
+  --name=NAME, -n NAME
+      Container or pod name. Default: T3_NAME, or 'typo3'.
+
+  --help, -h
+      Displays this text and exits.
+ 
+EOT
+        )
+        ALLOWED_OPTS='-e|--engine(=.+)?|-n|--name(=.+)?|-h|--help'
+        ;;
+
+
+    # Bind-mount a directory to a container volume
+    mount)
+        USAGE=$(cat <<EOT
+
+Usage:
+  $(basename $0) mount [bind-mount|-m] DIRECTORY [option]...
+  $(basename $0) mount [-h|--help]
+
+Bind-mounts a directory to a container volume so that the volume
+appears to be owned and can be managed by the current user.
+ 
+Equivalent to '$(basename $0) run' with an absolute path for '--typo3-vol'
+or '--db-vol' except that the container does not need to be running
+(it does not even have to exist).
+
+Options (default values can be overridden by environment variables):
+
+  --engine=ENGINE, -e ENGINE
+      Container engine being used: 'docker', 'podman' or an absolute path
+      to the engine executable.
+      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+
+  --mount=DIRECTORY, -m DIRECTORY
+      Absolute path of a directory to bind-mount to a container volume.
+      The basename of this path is taken as the name of the container
+      volume.
+
+  --help, -h
+      Displays this text and exits.
+ 
+EOT
+        )
+        ALLOWED_OPTS='-e|--engine(=.+)?|-m|--mount(=.+)?|-h|--help'
+        ;;
+
+
+    # Unmount a bind-mouted directory from a container volume
+    unmount)
+        USAGE=$(cat <<EOT
+
+Usage:
+  $(basename $0) unmount [--unmount|-u] DIRECTORY [option]...
+  $(basename $0) unmount [-h|--help]
+
+Unmounts a bind-mounted directory from the container volume.
+
+Options (default values can be overridden by environment variables):
+
+  --engine=ENGINE, -e ENGINE
+      Container engine being used: 'docker', 'podman' or an absolute path
+      to the engine executable.
+      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+
+  --unmount=DIRECTORY, -u DIRECTORY
+      Absolute path of the directory to unmount from a container volume.
+
+  --help, -h
+      Displays this text and exits.
+ 
+EOT
+        )
+        ALLOWED_OPTS='-e|--engine(=.+)?|-u|--unmount(=.+)?|-h|--help'
+        ;;
+
+
+    # General help
+    -h|--help)
+        MSG=
+        ;&
+
+
+    # Unknown command
+    *)
+        USAGE=$(cat <<EOT
+
+Usage:
+  $(basename $0) command [option]...
+
+Commands:
+
+  run           Runs the undecaf/typo3-dev TYPO3 container in Docker or Podman.
+
+  stop          Stops and removes a running TYPO3 container.
+
+  env           Modifies the environment of a running TYPO3 container.
+
+  composer      Runs Composer in a running TYPO3 container.
+
+  mount         Bind-mounts a directory to a container volume so that the
+                volume appears to be owned and can be managed by the current user.
+
+  unmount       Unmounts a bind-mouted directory from a container volume.
+
+  --help, -h    Displays this text and exits. Displays command-specific help if 
+                combined with a command.
+ 
+EOT
+        )
+        usage "$MSG"
+        ;;
+esac
+
+# Save command
+CMD="$1"
+shift
+OPT_COUNT=$#
+
+
+# --------------------------------------------------------------------------
+
+# Process command line options
+
+# Default options, overridden by environment variables
+T3_ENGINE=${T3_ENGINE:-$(which podman)} || T3_ENGINE=docker
+T3_NAME=${T3_NAME:-typo3}
+T3_TAG=${T3_TAG:-latest}
+T3_ROOT=${T3_ROOT:-typo3-root}
+T3_PORT=${T3_PORT:-127.0.0.1:8080}
+
+T3_ROOT_MP=
+DB_DATA=
+DB_DATA_MP=
+DB_PORT=
+REMOVE_STOPPED=
+DIR_PATH=
+
+while [[ $# -gt 0 ]]; do
+    # Check for allowed options by regular expression
+    [[ "$1" =~ $ALLOWED_OPTS ]] || break
+
+    case "$1" in
+        # Database type
+        -d|--db-type)
+            shift
+            ;&
+
+        --db-type=*)
+            T3_DB_TYPE="${1#--db-type=}"   # validated later
+            shift
+            ;;
+
+        # Container engine
+        -e|--engine)
+            shift
+            ;&
+
+        --engine=*)
+            T3_ENGINE="${1#--engine=}"  # basename or absolute path of an executable
+            shift
+            ;;
+
+        # Container name
+        -n|--name)
+            shift
+            ;&
+
+        --name=*)
+            T3_NAME="${1#--name=}"
+            shift
+            ;;
+
+        # Image tag
+        -t|--tag)
+            shift
+            ;&
+
+        --tag=*)
+            T3_TAG="${1#--tag=}"
+            shift
+            ;;
+
+        # Directory to be bind-mounted
+        -m|--mount)
+            shift
+            ;&
+
+        --mount=*)
+            DIR_PATH="${1#--mount=}"
+            verify_dir "$DIR_PATH"
+            is_absolute "$DIR_PATH" || usage "Not an absolute path: '$DIR_PATH'"
+            shift
+            ;;
+
+        # Directory to be unmounted
+        -u|--unmount)
+            shift
+            ;&
+
+        --unmount=*)
+            DIR_PATH="${1#--unmount=}"
+            is_absolute "$DIR_PATH" || usage "Not an absolute path: '$DIR_PATH'"
+            shift
+            ;;
+
+        # TYPO3 volume (volume name or absolute path)
+        # If an absolute path is given then its basename is used as the name
+        # of a volume which is mounted at the absolute path
+        -v|--typo3-root)
+            shift
+            ;&
+
+        --typo3-root=*)
+            T3_ROOT="${1#--typo3-root=}"
+            verify_dir "$T3_ROOT"
+            if is_absolute "$T3_ROOT"; then
+                T3_ROOT_MP="$T3_ROOT"
+                T3_ROOT=$(basename "$T3_ROOT")
+            fi
+            shift
+            ;;
+
+        # Database volume (volume name or absolute path)
+        # If an absolute path is given then its basename is used as the name
+        # of a volume which is mounted at the absolute path
+        -w|--db-data)
+            shift
+            ;&
+
+        --db-data=*)
+            DB_DATA="${1#--db-data=}"
+            verify_dir "$DB_DATA"
+            if is_absolute "$DB_DATA"; then
+                DB_DATA_MP="$DB_DATA"
+                DB_DATA=$(basename "$DB_DATA")
+            fi
+            shift
+            ;;
+
+        # TYPO3 HTTP port
+        -p|--typo3-port)
+            shift
+            ;&
+
+        --typo3-port=*)
+            T3_PORT="${1#--typo3-port=}"
+            shift
+            ;;
+
+        # Database port
+        -q|--db-port)
+            shift
+            ;&
+
+        --db-port=*)
+            DB_PORT="${1#--db-port=}"
+            shift
+            ;;
+
+        # Remove container(s) after being stopped
+        --rm)
+            REMOVE_STOPPED=1
+            shift
+            ;;
+
+        # Help for selected command
+        -h|--help)
+            usage
+            ;;
+
+        # Separator from container engine options
+        --)
+            shift
+            break
+            ;;
+
+        # First unknown option, pass through to the container engine
+        *)
+            break
+            ;;
+    esac
+done
+
+# At least one option must be present
+[ $OPT_COUNT -eq 0 ] && usage 'No option was found but at least one is required'
+
+
+# --------------------------------------------------------------------------
+
+# Set up the container environment
+
+# Determine container engine name
+T3_ENGINE=$(autocomplete "$T3_ENGINE" docker podman)
+[ -x "$(which $T3_ENGINE)" ] || usage "Container engine '$T3_ENGINE' not found"
+
+T3_ENGINE=$(which $T3_ENGINE)
+ENGINE_NAME=$(basename $T3_ENGINE)
+
+# Database type-specific settings
+T3_DB_TYPE=$(autocomplete "$T3_DB_TYPE" mariadb postgresql)
+case "$T3_DB_TYPE" in
+    mariadb)
+        DB_CONTAINER_PORT=3306
+        DB_DATA=${DB_DATA:-${T3_MARIA_DATA:-mariadb-data}}
+        DB_PORT=${DB_PORT:-${T3_MARIA_PORT:-127.0.0.1:$DB_CONTAINER_PORT}}
+        DB_CREDENTIALS="\
+            --env MARIADB_DATABASE=${T3_MDB_DATABASE:-t3} \
+            --env MARIADB_USER=${T3_MDB_USER:-t3} \
+            --env MARIADB_PASSWORD=${T3_MDB_PASSWORD:-t3} \
+            --env MARIADB_ROOT_PASSWORD=${T3_MDB_ROOT_PASSWORD:-toor}"
+        ;;
+
+    postgresql)
+        DB_CONTAINER_PORT=5432
+        DB_DATA=${DB_DATA:-${T3_PG_DATA:-postgresql-data}}
+        DB_PORT=${DB_PORT:-${T3_PG_PORT:-127.0.0.1:$DB_CONTAINER_PORT}}
+        DB_CREDENTIALS="\
+            --env POSTGRESQL_DATABASE=${T3_MDB_DATABASE:-t3} \
+            --env POSTGRESQL_USERNAME=${T3_MDB_USER:-t3} \
+            --env POSTGRESQL_PASSWORD=${T3_MDB_PASSWORD:-t3}"
+        ;;
+
+    '')
+        DB_CONTAINER_PORT=
+        DB_DATA=
+        DB_DATA_MP=
+        DB_PORT=
+        DB_CREDENTIALS=
+        ;;
+
+    *)
+        usage "Unknown database type: '$T3_DB_TYPE'"
+        ;;
+esac
+
+
+# Options that differ between container engines
+case $ENGINE_NAME in
+    docker)
+        HOST_IP_ENV=
+        HOST_IP_OPT=
+        MP_FORMAT='{{.Mountpoint}}'
+        CONTNAME_PROP='.Name'
+        SUDO_PREFIX=sudo
+        ;;
+
+    podman)
+        HOST_IP_ENV="HOST_IP=$(hostname -I | awk '{print $1}')"
+        HOST_IP_OPT="--env $HOST_IP_ENV"
+        MP_FORMAT='{{.MountPoint}}'
+        CONTNAME_PROP='.Source'
+        SUDO_PREFIX=
+        ;;
+esac
+
+
+# --------------------------------------------------------------------------
+
+# Execute command
+
+case "$CMD" in
+
+    run)
+        HOSTNAME="typo3.$(hostname)"
+
+        # TODO: trap error and t3 stop
+
+        # Database container required?
+        if [ -z "$T3_DB_TYPE" ]; then
+            # No, just run the TYPO3 container
+            set -x
+            $T3_ENGINE run \
+                --detach \
+                --name "$T3_NAME" \
+                --hostname "$HOSTNAME" \
+                --volume "$T3_ROOT:$T3_ROOTDIR" \
+                --publish $T3_PORT:80 \
+                $HOST_IP_OPT \
+                $@ \
+                $REPO_SLUG${T3_TAG:+:$T3_TAG} \
+                >/dev/null
+
+        else
+            case "$ENGINE_NAME" in
+                podman|docker)
+                    # Share the network stack between database and TYPO3 container
+                    set -x -e
+                    "$ENGINE_NAME" run \
+                        --detach \
+                        --name "${T3_NAME}-${T3_DB_TYPE}" \
+                        --hostname "$HOSTNAME" \
+                        --volume "${DB_DATA}:/bitnami/${T3_DB_TYPE}" \
+                        $DB_CREDENTIALS \
+                        $@ \
+                        bitnami/${T3_DB_TYPE} \
+                        >/dev/null
+
+                    "$ENGINE_NAME" run \
+                        --detach \
+                        --name "$T3_NAME" \
+                        --network container:"${T3_NAME}-${T3_DB_TYPE}" \
+                        --volume "$T3_ROOT:$T3_ROOTDIR" \
+                        $HOST_IP_OPT \
+                        $@ \
+                        $REPO_SLUG${T3_TAG:+:$T3_TAG} \
+                        >/dev/null
+                    ;;
+
+                *)
+                    usage "Unknown container engine: '$T3_ENGINE'"
+                    ;;
+            esac
+        fi
+
+        { set +x; } 2>/dev/null   # disable command echoing and do not echo this command
+
+        # Eventually bind-mount container volumes in userspace
+        mount_volume "$T3_ROOT" "$T3_ROOT_MP"
+        mount_volume "$DB_DATA" "$DB_DATA_MP"
+        ;;
+
+
+    stop)
+        # Collect volume names from container(s)
+        VOLNAMES=
+        for CONTNAME in "$T3_NAME"{,-mariadb,-postgresql}; do
+            VOLNAMES="$VOLNAMES $($T3_ENGINE container inspect \
+                --format='{{range .Mounts}}{{if eq .Destination "'$T3_ROOTDIR'" "'$MARIADB_DATADIR'" "'$POSTGRESQL_DATADIR'"}}{{printf "%s " '$CONTNAME_PROP'}}{{end}}{{end}}' \
+                "$CONTNAME" 2>/dev/null)"
+        done
+
+        # Try to unmount whatever may be mounted at the mountpoint of each volume
+        for VOLNAME in $VOLNAMES; do
+            unmount_volume "$VOLNAME"
+        done
+
+        # Stop and eventually remove the container(s)
+        for CONTNAME in "$T3_NAME"{,-mariadb,-postgresql}; do
+            stop_container "$CONTNAME"
+        done
+        ;;
+
+
+    env)
+        set -x
+        $T3_ENGINE exec "$T3_NAME" setenv $HOST_IP_ENV $@
+        ;;
+
+
+    composer)
+        set -x
+        $T3_ENGINE exec "$T3_NAME" composer $@
+        ;;
+
+
+    mount)
+        test -n "$DIR_PATH" || usage "Option '--mount' is required"
+        mount_volume $(basename "$DIR_PATH") "$DIR_PATH"
+        ;;
+
+
+    unmount)
+        test -d "$DIR_PATH" || usage "Option '--unmount' is required"
+        sudo --prompt 'sudo authorization is required for unmounting: ' \
+            umount "$DIR_PATH" \
+        && echo "Directory '$DIR_PATH' unmounted from volume '$(basename "$DIR_PATH")'"    
+        ;;
+
+
+    *)
+        usage "Unknown command: '$CMD'"
+        ;;
+esac
