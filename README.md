@@ -8,10 +8,10 @@ This project provides a containerized TYPO3 installation equivalent to
 [Composer Mode](https://wiki.typo3.org/Composer#Composer_Mode).
 The image is based on [Alpine Linux](https://alpinelinux.org/), Apache and PHP&nbsp;7 and is only 280&nbsp;MB in size.
 
-The TYPO3 container can be linked to a database container such as
+The TYPO3 container can be combined with a database container such as
 [MySQL or PostgreSQL](#using-mariadb-or-postgresql)
 but also can be run independently due to the built-in SQLite database.
-Setting up and managing these scenarios is simplified by a few shell scripts.
+Setting up and managing these scenarios is simplified by a shell script.
 
 You can use your favorite IDE on the host to
 [develop for TYPO3](#developing-for-typo3) in the container,
@@ -31,6 +31,7 @@ File access rights, ownerships, UIDs and GIDs are transparently and consistently
 
 -   [Running TYPO3](#running-typo3)
     -   [Quick start](#quick-start)
+    -   [Shell scripts](#shell-scripts)
     -   [Using MariaDB or PostgreSQL](#using-mariadb-or-postgresql)
         -   [Docker Compose](#docker-compose)
         -   [Podman](#podman)
@@ -57,12 +58,11 @@ File access rights, ownerships, UIDs and GIDs are transparently and consistently
 ### Quick start
 
 To start a TYPO3 instance in a standalone container, enter this command
-or run the script
-[`t3run`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/t3run):
+or run the [shell script](#shell-scripts) `t3run`:
 
 ```bash
 $ docker run \
-    --volume typo3-vol:/var/www/localhost \
+    --volume typo3-root:/var/www/localhost \
     --publish 127.0.0.1:8080:80 \
     undecaf/typo3-dev
 ```
@@ -70,15 +70,19 @@ $ docker run \
 If you prefer
 [working rootless](https://de.slideshare.net/AkihiroSuda/rootless-containers)
 with [Podman](https://podman.io/) then substitute `podman` for `docker`.
-[`t3run`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/t3run)
-uses Podman automatically if it is installed.
+`t3run` uses Podman automatically if it is installed.
 
 Next, browse to `http://localhost:8080`. This starts the TYPO3 installation wizard. 
 When asked to select a database, choose `Manually configured SQLite connection` and
 continue through the remaining dialogs to the TYPO3 login dialog.
 
-[Volume](#volumes) `typo3-vol` persists the state of the TYPO3 installation
+[Volume](#volumes) `typo3-root` persists the state of the TYPO3 installation
 independently of container lifetime.
+
+
+### Shell scripts
+
+TODO
 
 
 ### Using MariaDB or PostgreSQL
@@ -139,15 +143,18 @@ Named volumes persist the TYPO3 state beyond container lifetime.
 [`t3run`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/t3run)
 establishes the following mappings by default:
 
--   `typo3-vol:/var/www/localhost`: TYPO3 installation directory where
+-   `typo3-root:/var/www/localhost`: TYPO3 installation directory where
     `composer.json` is located.  
     The TYPO3 SQLite database (if used) is located at
     `/var/www/localhost/var/sqlite`,
     Apache and XDebug logs at `/var/www/logs`.
--   `mariadb-vol:/bitnami/mariadb`: contains the MariaDB database if used.
--   `postgresql-vol:/bitnami/postgresql`: contains the PostgreSQL database if used.
+-   `mariadb-data:/bitnami/mariadb`: contains the MariaDB database if used.
+-   `postgresql-data:/bitnami/postgresql`: contains the PostgreSQL database if used.
 
-These mappings can be overriden by [`t3run [-v|-w]`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/t3run).
+Different default volume names or (absolute) paths can be defined in environment variables
+`T3_ROOT`, `T3_MARIA_DATA` and `T3_PG_DATA`, respectively.
+Defaults can be overriden per invocation by options
+[`t3run [-v|-w]`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/t3run).
 
 
 ### Ports
@@ -253,12 +260,12 @@ running Composer because it might slow down Composer significantly.
 #### Background
 
 The TYPO3 installation is accessible outside of the 
-container at the mount point of `typo3-vol` which can be obtained by `inspect`ing
+container at the mount point of `typo3-root` which can be obtained by `inspect`ing
 the container. The files, however, are owned by a system account and cannot be edited
 by you:
 
 ```bash
-$ sudo ls -nA $(sudo docker volume inspect --format '{{.Mountpoint}}' typo3-vol)
+$ sudo ls -nA $(sudo docker volume inspect --format '{{.Mountpoint}}' typo3-root)
 
 -rw-r--r--  1 100 101   1117 Mai  3 23:00 composer.json
 -rw-r--r--  1 100 101 155056 Mai  3 23:01 composer.lock
@@ -274,7 +281,7 @@ With Podman, files are owned by one of your sub-UIDs which leads to the same pro
 
 [bindfs](https://bindfs.org/) (available only for Debian-like and MacOS hosts)
 is a [FUSE](https://github.com/libfuse/libfuse) filesystem that
-resolves this situation. It can provide a bind-mounted _view_ of
+resolves this situation (osxfuse needed). It can provide a bind-mounted _view_ of
 the files and directories in a volume with their UIDs and GIDs
 mapped to your own UID and GID. This does not affect UIDs and GIDs seen by the
 container.
@@ -285,19 +292,19 @@ distribution.
 <a id="t3mount"></a>
 Then use 
 [`t3mount`](https://raw.githubusercontent.com/undecaf/typo3-dev/master/shell/t3mount)
-to mount a view of `typo3-vol` at a _subdirectory_ of your
+to mount a view of `typo3-root` at a _subdirectory_ of your
 TYPO3 development workspace (in order to keep IDE settings out
-of the TYPO3 installation), e.g. at `typo3-vol-mapped`:
+of the TYPO3 installation), e.g. at `typo3-root-mapped`:
 
 ```bash
-$ t3mount typo3-vol ~/typo3-dev/typo3-vol-mapped
+$ t3mount typo3-root ~/typo3-dev/typo3-root-mapped
 ```
 
-Now you _appear_ to be the owner of the files and directories in `typo3-vol-mapped`,
+Now you _appear_ to be the owner of the files and directories in `typo3-root-mapped`,
 and they can be edited by you:
 
 ```bash
-$ ls -nA ~/typo3-dev/typo3-vol-mapped
+$ ls -nA ~/typo3-dev/typo3-root-mapped
 
 -rw-r--r--  1 1000 1000   1117 Mai  3 23:00 composer.json
 -rw-r--r--  1 1000 1000 155056 Mai  3 23:01 composer.lock
@@ -341,8 +348,8 @@ These modifications are lost whenever the container is stopped.
 -   VSCode: install 
     [PHP Debug](https://github.com/felixfbecker/vscode-php-debug),
     add the following configuration to your `launch.json` file
-    and start debugging with this configuration. If necessary, replace `typo3-vol-mapped` with the actual [mount directory](#t3mount) of
-    `typo3-vol`:
+    and start debugging with this configuration. If necessary, replace `typo3-root-mapped` with the actual [mount directory](#t3mount) of
+    `typo3-root`:
 
     ```json
     {
@@ -351,7 +358,7 @@ These modifications are lost whenever the container is stopped.
         "request": "launch",
         "port": 9000,
         "pathMappings": {
-            "/var/www/localhost": "${workspaceRoot}/typo3-vol-mapped"
+            "/var/www/localhost": "${workspaceRoot}/typo3-root-mapped"
         }
     }
     ```
@@ -382,7 +389,7 @@ Now everything is ready to start a XDebug session.
 To clean up afterwards:
 
 ```bash
-$ sudo umount ~/typo3-dev/typo3-vol-mapped
+$ sudo umount ~/typo3-dev/typo3-root-mapped
 ```
 
 
@@ -390,7 +397,7 @@ $ sudo umount ~/typo3-dev/typo3-vol-mapped
 
 #### SQLite
 
-`typo3-vol` needs to be mounted as [described above](#making-mapped-files-editable).
+`typo3-root` needs to be mounted as [described above](#making-mapped-files-editable).
 Point your database client at the file `var/sqlite/cms-*.sqlite`
 in the mounted volume.
 This is the TYPO3 SQLite database. The actual filename contains a random part.
@@ -398,7 +405,7 @@ This is the TYPO3 SQLite database. The actual filename contains a random part.
 
 #### MariaDB and PostgreSQL
 
-`typo3-vol` does not need to be mounted. By default, MariaDB [is published](#ports)
+`typo3-root` does not need to be mounted. By default, MariaDB [is published](#ports)
 at `127.0.0.1:3306` and PostgreSQL at `127.0.0.1:5432`.
 
 The database credentials are part of the 
