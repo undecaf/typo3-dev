@@ -4,6 +4,8 @@ echo '*************** '"TYPO3_VER: '$TYPO3_VER'"
 echo '*************** '"TRAVIS_TAG: '$TRAVIS_TAG'"
 echo '*************** '"IMAGE_VER: '${TRAVIS_TAG:-latest}'"
 
+set -x
+
 docker build \
     --pull \
     --cache-from $TRAVIS_REPO_SLUG \
@@ -11,6 +13,8 @@ docker build \
     --build-arg IMAGE_VER=${TRAVIS_TAG:-latest} \
     --tag $TRAVIS_REPO_SLUG \
     .
+
+set +x
 
 for T in $(.travis/tags.sh); do 
     echo '*************** '"Tagging $TRAVIS_REPO_SLUG as $TRAVIS_REPO_SLUG:$T"
