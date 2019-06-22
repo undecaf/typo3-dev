@@ -265,7 +265,7 @@ Options (default values can be overridden by environment variables):
       Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --name=NAME, -n NAME
-      Container or pod name to assign. Default: T3_NAME, or 'typo3'.
+      Container name to assign. Default: T3_NAME, or 'typo3'.
 
   --hostname=HOSTNAME, -h HOSTNAME
       Hostname assigned to the TYPO3 container and to Apache ServerName and
@@ -337,7 +337,7 @@ Options (default values can be overridden by environment variables):
       Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --name=NAME, -n NAME
-      Container or pod name. Default: T3_NAME, or 'typo3'.
+      Container name. Default: T3_NAME, or 'typo3'.
 
   --help, -h
       Displays this text and exits.
@@ -366,7 +366,7 @@ Options (default values can be overridden by environment variables):
       Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --name=NAME, -n NAME
-      Container or pod name. Default: T3_NAME, or 'typo3'.
+      Container name. Default: T3_NAME, or 'typo3'.
 
   --help, -h
       Displays this text and exits.
@@ -395,7 +395,7 @@ Options (default values can be overridden by environment variables):
       Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --name=NAME, -n NAME
-      Container or pod name. Default: T3_NAME, or 'typo3'.
+      Container name. Default: T3_NAME, or 'typo3'.
 
   --help, -h
       Displays this text and exits.
@@ -797,6 +797,8 @@ case "$CMD" in
                         --name "${T3_NAME}-${T3_DB_TYPE}" \
                         --hostname "$T3_HOSTNAME" \
                         --volume "${DB_DATA}:/bitnami/${T3_DB_TYPE}" \
+                        --publish $T3_PORT:80 \
+                        --publish $DB_PORT:$DB_CONTAINER_PORT \
                         $DB_CREDENTIALS \
                         $@ \
                         bitnami/${T3_DB_TYPE} \
