@@ -282,14 +282,14 @@ Options (default values can be overridden by environment variables):
 
   --typo3-vol=VOLUME, -v VOLUME
       Volume name to be mapped to the TYPO3 root directory inside the container.
-      If an absolute path of a directory is specified, its basename is used as the
+      If an absolute directory path is specified then its basename is used as the
       volume name; in addition, that directory is bind-mounted at the volume so 
       that files and directories in that volume  appear to be owned by the current
       user.
-      Default: \$T3_ROOT, or 'typo3-vol'.
+      Default: \$T3_ROOT, or 'typo3-root'.
 
   --typo3-port=PORT, -p PORT
-      Interface (optional) and port where to publish the TYPO3 HTTP port.
+      Host interface (optional) and port where to publish the TYPO3 HTTP port.
       Default: \$T3_PORT, or '127.0.0.1:8080'.
 
   --db-type=TYPE, -d TYPE
@@ -301,14 +301,13 @@ Options (default values can be overridden by environment variables):
   --db-vol=VOLUME, -V VOLUME
       Database volume name or absolute directory path as described for '--typo3-vol';
       requires option '--db-type'.
-      Defaults: \$T3_MARIA_DATA, or 'mariadb-data' for MariaDB;
-                \$T3_PG_DATA, or 'postgresql-data' for PostgreSQL.
+      Defaults: \$T3_DB_DATA, or 'typo3-db'.
 
   --db-port=PORT, -P PORT
-      Interface (optional) and port where to publish the database port;
+      Host interface (optional) and port where to publish the database port;
       requires option '--db-type'.
-      Defaults: \$T3_MARIA_PORT, or '127.0.0.1:3306' for MariaDB;
-                \$T3_PG_PORT, or '127.0.0.1:5432' for PostgreSQL.
+      Defaults: \$T3_DB_PORT, or '127.0.0.1:3306' for MariaDB and '127.0.0.1:5432'
+      for PostgreSQL.
  
   --env NAME=VALUE
       Sets the (initial) value of a container environment variable. The values of
@@ -716,44 +715,6 @@ T3_ENGINE=$(autocomplete "$T3_ENGINE" docker podman)
 T3_ENGINE=$(which $T3_ENGINE)
 ENGINE_NAME=$(basename $T3_ENGINE)
 
-# Database type-specific settings
-T3_DB_TYPE=$(autocomplete "$T3_DB_TYPE" mariadb postgresql)
-case "$T3_DB_TYPE" in
-    mariadb)
-        DB_CONTAINER_PORT=3306
-        DB_DATA=${DB_DATA:-${T3_MARIA_DATA:-mariadb-data}}
-        DB_PORT=${DB_PORT:-${T3_MARIA_PORT:-127.0.0.1:$DB_CONTAINER_PORT}}
-        DB_CREDENTIALS="\
-            --env MARIADB_DATABASE=${T3_MDB_DATABASE:-t3} \
-            --env MARIADB_USER=${T3_MDB_USER:-t3} \
-            --env MARIADB_PASSWORD=${T3_MDB_PASSWORD:-t3} \
-            --env MARIADB_ROOT_PASSWORD=${T3_MDB_ROOT_PASSWORD:-toor}"
-        ;;
-
-    postgresql)
-        DB_CONTAINER_PORT=5432
-        DB_DATA=${DB_DATA:-${T3_PG_DATA:-postgresql-data}}
-        DB_PORT=${DB_PORT:-${T3_PG_PORT:-127.0.0.1:$DB_CONTAINER_PORT}}
-        DB_CREDENTIALS="\
-            --env POSTGRESQL_DATABASE=${T3_MDB_DATABASE:-t3} \
-            --env POSTGRESQL_USERNAME=${T3_MDB_USER:-t3} \
-            --env POSTGRESQL_PASSWORD=${T3_MDB_PASSWORD:-t3}"
-        ;;
-
-    '')
-        DB_CONTAINER_PORT=
-        DB_DATA=
-        DB_DATA_MP=
-        DB_PORT=
-        DB_CREDENTIALS=
-        ;;
-
-    *)
-        usage "Unknown database type: '$T3_DB_TYPE'"
-        ;;
-esac
-
-
 # Options that differ between container engines
 case $ENGINE_NAME in
     docker)
@@ -770,6 +731,44 @@ case $ENGINE_NAME in
         MP_FORMAT='{{.MountPoint}}'
         CONTNAME_PROP='.Source'
         SUDO_PREFIX=
+        ;;
+esac
+
+
+# Database type-specific settings
+T3_DB_TYPE=$(autocomplete "$T3_DB_TYPE" mariadb postgresql)
+case "$T3_DB_TYPE" in
+    mariadb)
+        DB_CONTAINER_PORT=3306
+        DB_DATA=${DB_DATA:-${T3_DB_DATA:-mariadb-data}}
+        DB_PORT=${DB_PORT:-${T3_DB_PORT:-127.0.0.1:$DB_CONTAINER_PORT}}
+        DB_CREDENTIALS="\
+            --env MARIADB_DATABASE=${T3_DB_NAME:-t3} \
+            --env MARIADB_USER=${T3_DB_USER:-t3} \
+            --env MARIADB_PW=${T3_DB_PW:-t3} \
+            --env MARIADB_ROOT_PW=${T3_DB_ROOT_PW:-toor}"
+        ;;
+
+    postgresql)
+        DB_CONTAINER_PORT=5432
+        DB_DATA=${DB_DATA:-${T3_DB_DATA:-postgresql-data}}
+        DB_PORT=${DB_PORT:-${T3_DB_PORT:-127.0.0.1:$DB_CONTAINER_PORT}}
+        DB_CREDENTIALS="\
+            --env POSTGRESQL_DATABASE=${T3_DB_NAME:-t3} \
+            --env POSTGRESQL_USERNAME=${T3_DB_USER:-t3} \
+            --env POSTGRESQL_PW=${T3_DB_PW:-t3}"
+        ;;
+
+    '')
+        DB_CONTAINER_PORT=
+        DB_DATA=
+        DB_DATA_MP=
+        DB_PORT=
+        DB_CREDENTIALS=
+        ;;
+
+    *)
+        usage "Unknown database type: '$T3_DB_TYPE'"
         ;;
 esac
 
