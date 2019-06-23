@@ -252,9 +252,10 @@ Usage:
   $(basename $0) run [option]... [--] [Docker/Podman option]...
   $(basename $0) run [-h|--help]
 
-Runs the undecaf/typo3-dev TYPO3 container in detached mode in Docker or Podman.
+Runs TYPO3 image 'undecaf/typo3-dev' in a container in Docker or Podman,
+optionally together with a MariaDB/PostgreSQL container.
 
-Although  all options are optional, at least one option must be set
+Although all options are optional, at least one option must be set
 ('--' is sufficient) as a precaution against inadvertent command invocation.
 
 Options (default values can be overridden by environment variables):
@@ -265,8 +266,8 @@ Options (default values can be overridden by environment variables):
       Default: \$T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --name=NAME, -n NAME
-      Container name. The database container name, if any, has '-mariadb' or
-      '-postgresql' appended to this name.
+      Container name. The database container name, if any, has '-db' appended
+      to this name.
       Default: \$T3_NAME, or 'typo3'.
 
   --hostname=HOSTNAME, -h HOSTNAME
@@ -309,6 +310,10 @@ Options (default values can be overridden by environment variables):
       Defaults: \$T3_DB_PORT, or '127.0.0.1:3306' for MariaDB and '127.0.0.1:5432'
       for PostgreSQL.
  
+  --rm
+      Causes the TYPO3 container and the respective database container (if one 
+      exists) to be removed after they were stopped.
+ 
   --env NAME=VALUE
       Sets the (initial) value of a container environment variable. The values of
       certain variables can be changed afterwards by '$(basename $0) env'.
@@ -348,6 +353,10 @@ Options (default values can be overridden by environment variables):
       Container name. The database container name, if any, has '-mariadb' or
       '-postgresql' appended to this name.
       Default: \$T3_NAME, or 'typo3'.
+ 
+  --rm
+      Causes the TYPO3 container and the respective database container (if one 
+      exists) to be removed after they were stopped.
 
   --help, -h
       Displays this text and exits.
@@ -492,12 +501,13 @@ EOT
         USAGE=$(cat <<EOT
 
 Usage:
-  $(basename $0) command [option]...
+  $(basename $0) COMMAND [option]...
 
 Commands:
 
-  run           Runs the undecaf/typo3-dev TYPO3 container in Docker or Podman.
-
+  run           Runs TYPO3 image 'undecaf/typo3-dev' in a container in Docker or
+                Podman, optionally together with a MariaDB/PostgreSQL container.
+ 
   stop          Stops and removes a running TYPO3 container.
 
   env           Modifies the environment of a running TYPO3 container.
@@ -804,7 +814,7 @@ case "$CMD" in
                     set -x -e
                     "$ENGINE_NAME" run \
                         --detach \
-                        --name "${T3_NAME}-${T3_DB_TYPE}" \
+                        --name "${T3_NAME}-db" \
                         --hostname "$T3_HOSTNAME" \
                         --volume "${DB_DATA}:/bitnami/${T3_DB_TYPE}" \
                         --publish $T3_PORT:80 \
