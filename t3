@@ -259,54 +259,63 @@ Although  all options are optional, at least one option must be set
 
 Options (default values can be overridden by environment variables):
 
-  --engine=T3_ENGINE, -e T3_ENGINE
+  --engine=ENGINE, -e ENGINE
       Container engine to use: 'docker', 'podman' (can be abbreviated) or an 
       absolute path to the engine executable.
-      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+      Default: \$T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --name=NAME, -n NAME
-      Container name to assign. Default: T3_NAME, or 'typo3'.
+      Container name. The database container name, if any, has '-mariadb' or
+      '-postgresql' appended to this name.
+      Default: \$T3_NAME, or 'typo3'.
 
   --hostname=HOSTNAME, -h HOSTNAME
       Hostname assigned to the TYPO3 container and to Apache ServerName and
       ServerAdmin.
-      Default: T3_HOSTNAME, or 'typo3.$(hostname)'.
+      Default: \$T3_HOSTNAME, or 'typo3.$(hostname)'.
 
   --tag=TAG, -t TAG
       Tag of image to run, consisting of TYPO3 version and build version,
       e.g. '8.7-1.3' or '9.5-latest'.
-      Default: T3_TAG, or 'latest', i.e. the latest build for the most recent
+      Default: \$T3_TAG, or 'latest', i.e. the latest build for the most recent
       TYPO3 version.
 
   --typo3-vol=VOLUME, -v VOLUME
       Volume name to be mapped to the TYPO3 root directory inside the container.
-      If an absolute path of a directory is specified, its basename is used as name
-      of the volume; in addition, that directory is bind-mounted at the volume so 
+      If an absolute path of a directory is specified, its basename is used as the
+      volume name; in addition, that directory is bind-mounted at the volume so 
       that files and directories in that volume  appear to be owned by the current
       user.
-      Default: T3_ROOT, or 'typo3-vol'.
+      Default: \$T3_ROOT, or 'typo3-vol'.
 
   --typo3-port=PORT, -p PORT
       Interface (optional) and port where to publish the TYPO3 HTTP port.
-      Default: T3_PORT, or '127.0.0.1:8080'.
+      Default: \$T3_PORT, or '127.0.0.1:8080'.
 
   --db-type=TYPE, -d TYPE
-      Type of database container: 'mariadb' for MariaDB, 'postgresql' for PostgreSQL
-      (can be abbreviated). If omitted or empty then the SQLite instance of the
-      TYPO3 container will be used.
+      Type of database container: 'mariadb' for MariaDB or 'postgresql' for 
+      PostgreSQL (can be abbreviated). If empty then the SQLite instance of
+      the TYPO3 container will be used.
+      Default: \$T3_DB_TYPE, or empty.
 
   --db-vol=VOLUME, -V VOLUME
       Database volume name or absolute directory path as described for '--typo3-vol';
       requires option '--db-type'.
-      Defaults: T3_MARIA_DATA, or 'mariadb-data' for MariaDB,
-                T3_PG_DATA, or 'postgresql-data' for PostgreSQL.
+      Defaults: \$T3_MARIA_DATA, or 'mariadb-data' for MariaDB;
+                \$T3_PG_DATA, or 'postgresql-data' for PostgreSQL.
 
   --db-port=PORT, -P PORT
       Interface (optional) and port where to publish the database port;
       requires option '--db-type'.
-      Defaults: T3_MARIA_PORT, or '127.0.0.1:3306' for MariaDB,
-                T3_PG_PORT, or '127.0.0.1:5432' for PostgreSQL.
-
+      Defaults: \$T3_MARIA_PORT, or '127.0.0.1:3306' for MariaDB;
+                \$T3_PG_PORT, or '127.0.0.1:5432' for PostgreSQL.
+ 
+  --env NAME=VALUE
+      Sets the (initial) value of a container environment variable. The values of
+      certain variables can be changed afterwards by '$(basename $0) env'.
+      This option may appear multiple times. '--env' options must be the last options
+      on the command line.
+ 
   --help, -h
       Displays this text and exits.
 
@@ -334,10 +343,12 @@ Options (default values can be overridden by environment variables):
   --engine=ENGINE, -e ENGINE
       Container engine being used: 'docker', 'podman' or an absolute path
       to the engine executable.
-      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+      Default: \$T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --name=NAME, -n NAME
-      Container name. Default: T3_NAME, or 'typo3'.
+      Container name. The database container name, if any, has '-mariadb' or
+      '-postgresql' appended to this name.
+      Default: \$T3_NAME, or 'typo3'.
 
   --help, -h
       Displays this text and exits.
@@ -348,7 +359,7 @@ EOT
         ;;
 
 
-    # Change environment settings in a running container
+    # Change environment settings in a running TYPO3 container
     env)
         USAGE=$(cat <<EOT
 
@@ -363,10 +374,10 @@ Options (default values can be overridden by environment variables):
   --engine=ENGINE, -e ENGINE
       Container engine being used: 'docker', 'podman' or an absolute path
       to the engine executable.
-      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+      Default: \$T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --name=NAME, -n NAME
-      Container name. Default: T3_NAME, or 'typo3'.
+      Container name. Default: \$T3_NAME, or 'typo3'.
 
   --help, -h
       Displays this text and exits.
@@ -377,7 +388,7 @@ EOT
         ;;
 
 
-    # Run Composer in a running container
+    # Run Composer in a running TYPO3 container
     composer)
         USAGE=$(cat <<EOT
 
@@ -392,10 +403,10 @@ Options (default values can be overridden by environment variables):
   --engine=ENGINE, -e ENGINE
       Container engine being used: 'docker', 'podman' or an absolute path
       to the engine executable.
-      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+      Default: \$T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --name=NAME, -n NAME
-      Container name. Default: T3_NAME, or 'typo3'.
+      Container name. Default: \$T3_NAME, or 'typo3'.
 
   --help, -h
       Displays this text and exits.
@@ -426,11 +437,11 @@ Options (default values can be overridden by environment variables):
   --engine=ENGINE, -e ENGINE
       Container engine being used: 'docker', 'podman' or an absolute path
       to the engine executable.
-      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+      Default: \$T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --mount=DIRECTORY, -m DIRECTORY
-      Absolute path of a directory to bind-mount to a container volume.
-      The basename of this path is taken as the name of the container
+      Absolute path of a directory to bind-mount to a persistent volume.
+      The basename of this path is taken as the name of the persistent
       volume.
 
   --help, -h
@@ -457,10 +468,10 @@ Options (default values can be overridden by environment variables):
   --engine=ENGINE, -e ENGINE
       Container engine being used: 'docker', 'podman' or an absolute path
       to the engine executable.
-      Default: T3_ENGINE, or 'podman' if installed, else 'docker'.
+      Default: \$T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --unmount=DIRECTORY, -u DIRECTORY
-      Absolute path of the directory to unmount from a container volume.
+      Absolute path of the directory to unmount from a persistent volume.
 
   --help, -h
       Displays this text and exits.
