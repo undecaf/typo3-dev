@@ -300,8 +300,7 @@ Options (default values can be overridden by environment variables):
       Default: \$T3_DB_TYPE, or empty.
 
   --db-vol=VOLUME, -V VOLUME
-      Database volume name or working directory path as described for '--typo3-vol';
-      requires option '--db-type'.
+      Database volume name; requires option '--db-type'.
       Defaults: \$T3_DB_DATA, or 'typo3-data'.
 
   --db-port=PORT, -P PORT
@@ -340,7 +339,7 @@ Usage:
   $(basename $0) stop [option]...
   $(basename $0) stop [-h|--help]
 
-Stops a TYPO3 (and the respective database) container running in Docker or Podman.
+Stops a TYPO3 (and the associated database) container running in Docker or Podman.
 
 Although all options are optional, at least one option must be set
 ('--' is sufficient) as a precaution against inadvertent command invocation.
@@ -511,7 +510,7 @@ Commands:
   run           Runs TYPO3 image 'undecaf/typo3-dev' in a container in Docker or
                 Podman, optionally together with a MariaDB/PostgreSQL container.
  
-  stop          Stops a running TYPO3 container.
+  stop          Stops a running TYPO3 (and the associated database) container.
 
   env           Modifies the environment of a running TYPO3 container.
 
