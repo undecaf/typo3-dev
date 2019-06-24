@@ -66,36 +66,36 @@ EOT
 
 # --------------------------------------------------------------------------
 
-# Returns exit code 0 if the argument starts with an '/'.
+# Returns exit code 0 if the argument contains a '/'.
 #
 # Arguments:
-#   $1  string to test for an absolute path
+#   $1  string to test
 #
-is_absolute() {
+is_path() {
     local RE
-    RE='^/.+'
+    RE='.+/.+'
     [[ "$1" =~ $RE ]]
 }
 
 
 # --------------------------------------------------------------------------
 
-# If the argument is an absolute path, verify that at least the parent exists
-# and that it is an empty directory.
+# If the argument is a path, verify that at least the parent exists and that
+# it is an empty directory.
 #
 # Arguments:
-#   $1  absolute path of a directory to bind-mount, or a volume name
+#   $1  path of a working directory to bind-mount, or a volume name
 #
 # Calls:
-#   is_absolute
+#   is_path
 #
 verify_dir() {
-    if is_absolute "$1"; then
+    if is_path "$1"; then
         # At least the parent directory must exist
-        readlink -f "$1" &>/dev/null || usage "Bind-mount directory '$1' does not have a parent"
+        readlink -f "$1" &>/dev/null || usage "Working directory '$1' does not have a parent"
 
         # Mount point must be an empty directory
-        [ -n "$(ls -A "$1" 2>/dev/null)" ] && usage "Bind-mount path '$1' is not an empty directory"
+        [ -n "$(ls -A "$1" 2>/dev/null)" ] && usage "Working directory path '$1' is not an empty directory"
     fi
 }
 
@@ -126,13 +126,13 @@ autocomplete() {
 
 # --------------------------------------------------------------------------
 
-# Bind-mounts a directory to a container volume so that files and directories
-# of that volume appear to be owned by the current user.
-# Does nothing if no absolute directory path was given.
+# Bind-mounts a working directory to a container volume so that files and
+# directories of that volume appear to be owned by the current user.
+# Does nothing if no path was given.
 #
 # Arguments:
 #   $1  name of container volume
-#   $2  (absolute) directory path
+#   $2  working directory path
 #
 # Environment:
 #   $T3_ENGINE
@@ -140,10 +140,10 @@ autocomplete() {
 #   $SUDO_PREFIX
 #
 # Calls:
-#   is_absolute
+#   is_path
 #
 mount_volume() {
-    if is_absolute "$2"; then
+    if is_path "$2"; then
         if ! which bindfs &>/dev/null; then
             unset USAGE
             usage "bindfs not installed, see https://bindfs.org/ for information"
@@ -173,7 +173,7 @@ mount_volume() {
             --map=$VOL_UID/$(id -u):@$VOL_GID/@$(id -g) \
             $VOL_MP \
             "$BIND_MP" \
-        && echo "Directory '$BIND_MP' bind-mounted to volume '$1'"
+        && echo "Working directory '$BIND_MP' bind-mounted to volume '$1'"
     fi
 }
 
@@ -206,7 +206,7 @@ unmount_volume() {
     if [ -n "$BIND_MP" ]; then
         sudo --prompt 'sudo authorization is required for unmounting: ' \
             umount "$BIND_MP" \
-        && echo "Directory '$BIND_MP' unmounted from volume '$1'"    
+        && echo "Working directory '$BIND_MP' unmounted from volume '$1'"    
     fi
 }
 
@@ -227,7 +227,7 @@ unmount_volume() {
 stop_container() {
     if $T3_ENGINE stop "$1" &>/dev/null && echo "Container '$1' stopped"; then
         # Remove the container(s) if so requested
-        test -n "$REMOVE_STOPPED" && $T3_ENGINE container rm "$1" >/dev/null
+        test -n "$REMOVE_STOPPED" && $T3_ENGINE container rm "$1" &>/dev/null
 
         # Wait until the container was removed eventually
         sleep 1
@@ -282,11 +282,11 @@ Options (default values can be overridden by environment variables):
       TYPO3 version.
 
   --typo3-vol=VOLUME, -v VOLUME
-      Volume name to be mapped to the TYPO3 root directory inside the container.
-      If an absolute directory path is specified then its basename is used as the
-      volume name; in addition, that directory is bind-mounted at the volume so 
-      that files and directories in that volume  appear to be owned by the current
-      user.
+      Either a volume name to be mapped to the TYPO3 root directory inside the
+      container, or a working directory path (containing a '/').
+      In the latter case, the directory basename is used as the volume name,
+      and the directory is bind-mounted at that volume. Thus, volume content
+      appears to be owned by the current user.
       Default: \$T3_ROOT, or 'typo3-root'.
 
   --typo3-port=PORT, -p PORT
@@ -300,7 +300,7 @@ Options (default values can be overridden by environment variables):
       Default: \$T3_DB_TYPE, or empty.
 
   --db-vol=VOLUME, -V VOLUME
-      Database volume name or absolute directory path as described for '--typo3-vol';
+      Database volume name or working directory path as described for '--typo3-vol';
       requires option '--db-type'.
       Defaults: \$T3_DB_DATA, or 'typo3-data'.
 
@@ -620,7 +620,6 @@ while [[ $# -gt 0 ]]; do
         --mount=*)
             DIR_PATH="${1#--mount=}"
             verify_dir "$DIR_PATH"
-            is_absolute "$DIR_PATH" || usage "Not an absolute path: '$DIR_PATH'"
             shift
             ;;
 
@@ -631,7 +630,6 @@ while [[ $# -gt 0 ]]; do
 
         --unmount=*)
             DIR_PATH="${1#--unmount=}"
-            is_absolute "$DIR_PATH" || usage "Not an absolute path: '$DIR_PATH'"
             shift
             ;;
 
@@ -645,7 +643,7 @@ while [[ $# -gt 0 ]]; do
         --typo3-root=*)
             T3_ROOT="${1#--typo3-root=}"
             verify_dir "$T3_ROOT"
-            if is_absolute "$T3_ROOT"; then
+            if is_path "$T3_ROOT"; then
                 T3_ROOT_MP="$T3_ROOT"
                 T3_ROOT=$(basename "$T3_ROOT")
             fi
@@ -662,7 +660,7 @@ while [[ $# -gt 0 ]]; do
         --db-data=*)
             DB_DATA="${1#--db-data=}"
             verify_dir "$DB_DATA"
-            if is_absolute "$DB_DATA"; then
+            if is_path "$DB_DATA"; then
                 DB_DATA_MP="$DB_DATA"
                 DB_DATA=$(basename "$DB_DATA")
             fi
