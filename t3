@@ -302,7 +302,7 @@ Options (default values can be overridden by environment variables):
   --db-vol=VOLUME, -V VOLUME
       Database volume name or absolute directory path as described for '--typo3-vol';
       requires option '--db-type'.
-      Defaults: \$T3_DB_DATA, or 'typo3-db'.
+      Defaults: \$T3_DB_DATA, or 'typo3-data'.
 
   --db-port=PORT, -P PORT
       Host interface (optional) and port where to publish the database port;
@@ -340,7 +340,10 @@ Usage:
   $(basename $0) stop [option]...
   $(basename $0) stop [-h|--help]
 
-Stops and removes a TYPO3 (and the respective database) container running in Docker or Podman.
+Stops a TYPO3 (and the respective database) container running in Docker or Podman.
+
+Although all options are optional, at least one option must be set
+('--' is sufficient) as a precaution against inadvertent command invocation.
 
 Options (default values can be overridden by environment variables):
 
@@ -448,9 +451,9 @@ Options (default values can be overridden by environment variables):
       Default: \$T3_ENGINE, or 'podman' if installed, else 'docker'.
 
   --mount=DIRECTORY, -m DIRECTORY
-      Absolute path of a directory to bind-mount to a persistent volume.
-      The basename of this path is taken as the name of the persistent
-      volume.
+      Absolute path of a working directory to bind-mount to a persistent
+      volume. The basename of this path is taken as the name of the
+      persistent volume.
 
   --help, -h
       Displays this text and exits.
@@ -508,7 +511,7 @@ Commands:
   run           Runs TYPO3 image 'undecaf/typo3-dev' in a container in Docker or
                 Podman, optionally together with a MariaDB/PostgreSQL container.
  
-  stop          Stops and removes a running TYPO3 container.
+  stop          Stops a running TYPO3 container.
 
   env           Modifies the environment of a running TYPO3 container.
 
@@ -750,23 +753,23 @@ T3_DB_TYPE=$(autocomplete "$T3_DB_TYPE" mariadb postgresql)
 case "$T3_DB_TYPE" in
     mariadb)
         DB_CONTAINER_PORT=3306
-        DB_DATA=${DB_DATA:-${T3_DB_DATA:-mariadb-data}}
+        DB_DATA=${DB_DATA:-${T3_DB_DATA:-typo3-data}}
         DB_PORT=${DB_PORT:-${T3_DB_PORT:-127.0.0.1:$DB_CONTAINER_PORT}}
         DB_CREDENTIALS="\
             --env MARIADB_DATABASE=${T3_DB_NAME:-t3} \
             --env MARIADB_USER=${T3_DB_USER:-t3} \
-            --env MARIADB_PW=${T3_DB_PW:-t3} \
-            --env MARIADB_ROOT_PW=${T3_DB_ROOT_PW:-toor}"
+            --env MARIADB_PASSWORD=${T3_DB_PW:-t3} \
+            --env MARIADB_ROOT_PASSWORD=${T3_DB_ROOT_PW:-toor}"
         ;;
 
     postgresql)
         DB_CONTAINER_PORT=5432
-        DB_DATA=${DB_DATA:-${T3_DB_DATA:-postgresql-data}}
+        DB_DATA=${DB_DATA:-${T3_DB_DATA:-typo3-data}}
         DB_PORT=${DB_PORT:-${T3_DB_PORT:-127.0.0.1:$DB_CONTAINER_PORT}}
         DB_CREDENTIALS="\
             --env POSTGRESQL_DATABASE=${T3_DB_NAME:-t3} \
             --env POSTGRESQL_USERNAME=${T3_DB_USER:-t3} \
-            --env POSTGRESQL_PW=${T3_DB_PW:-t3}"
+            --env POSTGRESQL_PASSWORD=${T3_DB_PW:-t3}"
         ;;
 
     '')
@@ -827,7 +830,7 @@ case "$CMD" in
                     "$ENGINE_NAME" run \
                         --detach \
                         --name "$T3_NAME" \
-                        --network container:"${T3_NAME}-${T3_DB_TYPE}" \
+                        --network container:"${T3_NAME}-db" \
                         --volume "$T3_ROOT:$T3_ROOTDIR" \
                         $HOST_IP_OPT \
                         $@ \
@@ -852,7 +855,7 @@ case "$CMD" in
     stop)
         # Collect volume names from container(s)
         VOLNAMES=
-        for CONTNAME in "$T3_NAME"{,-mariadb,-postgresql}; do
+        for CONTNAME in "$T3_NAME"{,-db}; do
             VOLNAMES="$VOLNAMES $($T3_ENGINE container inspect \
                 --format='{{range .Mounts}}{{if eq .Destination "'$T3_ROOTDIR'" "'$MARIADB_DATADIR'" "'$POSTGRESQL_DATADIR'"}}{{printf "%s " '$CONTNAME_PROP'}}{{end}}{{end}}' \
                 "$CONTNAME" 2>/dev/null)"
@@ -864,7 +867,7 @@ case "$CMD" in
         done
 
         # Stop and eventually remove the container(s)
-        for CONTNAME in "$T3_NAME"{,-mariadb,-postgresql}; do
+        for CONTNAME in "$T3_NAME"{,-db}; do
             stop_container "$CONTNAME"
         done
         ;;
