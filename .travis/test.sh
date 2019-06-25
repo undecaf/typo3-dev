@@ -4,10 +4,10 @@ echo '********************* Testing'
 
 set -x
 
-./t3 run --
-docker container ls -f name='^/typo3$'
-docker volume ls -f name=typo3-root
+./t3 run -d mariadb
+trap './t3 stop --rm' EXIT
 
-./t3 stop --
+docker container ls -f name='^/typo3(-db)?$'
+docker volume ls -f name='^typo3-(root|data)$'
 
 # TODO
