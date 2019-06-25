@@ -1,10 +1,5 @@
 # Developing for TYPO3 with Docker or Podman
 
-<style>
-    code { white-space: nowrap; }
-    dt code { font-style: normal; font-weight: normal; }
-</style>
-
 [![Build Status](https://travis-ci.com/undecaf/typo3-dev.svg?branch=master)](https://travis-ci.com/undecaf/typo3-dev)
 
 This project provides a containerized TYPO3 installation equivalent to
