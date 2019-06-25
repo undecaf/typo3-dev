@@ -3,5 +3,5 @@
 .images
 .travis*
 README.md
-docker-compose
-shell
+COPYING
+t3
