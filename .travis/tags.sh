@@ -15,4 +15,4 @@ case "$TRAVIS_BRANCH" in
         ;;
 esac
 
-echo '*************** Tags: '"$TAGS"
+echo "$TAGS"
