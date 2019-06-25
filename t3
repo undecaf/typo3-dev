@@ -339,7 +339,7 @@ Usage:
   $(basename $0) stop [option]...
   $(basename $0) stop [-h|--help]
 
-Stops a TYPO3 (and the associated database) container running in Docker or Podman.
+Stops a running TYPO3 (and the associated database) container.
 
 Although all options are optional, at least one option must be set
 ('--' is sufficient) as a precaution against inadvertent command invocation.
@@ -374,10 +374,10 @@ EOT
         USAGE=$(cat <<EOT
 
 Usage:
-  $(basename $0) env [option]... [VAR=value]...
+  $(basename $0) env [option]... [NAME=VALUE]...
   $(basename $0) env [-h|--help]
 
-Modifies the environment of a TYPO3 container running in Docker or Podman.
+Modifies the environment of a running TYPO3 container.
 
 Options (default values can be overridden by environment variables):
 
@@ -403,10 +403,10 @@ EOT
         USAGE=$(cat <<EOT
 
 Usage:
-  $(basename $0) composer [option]... [Composer option]...
+  $(basename $0) composer [option]... COMPOSER_CMD [Composer option]...
   $(basename $0) composer [-h|--help]
 
-Runs Composer in a TYPO3 container running in Docker or Podman.
+Executes a Composer command inside of a running TYPO3 container.
 
 Options (default values can be overridden by environment variables):
 
@@ -432,15 +432,15 @@ EOT
         USAGE=$(cat <<EOT
 
 Usage:
-  $(basename $0) mount [bind-mount|-m] DIRECTORY [option]...
+  $(basename $0) mount [--mount|-m] WORK_DIR [option]...
   $(basename $0) mount [-h|--help]
 
-Bind-mounts a directory to a container volume so that the volume
+Mounts a working directory to a container volume so that the volume
 appears to be owned and can be managed by the current user.
  
-Equivalent to '$(basename $0) run' with an absolute path for '--typo3-vol'
-or '--db-vol' except that the container does not need to be running
-(it does not even have to exist).
+Equivalent to '$(basename $0) run' with a directory path for '--typo3-vol'
+except that the container does not need to be running (it does not even 
+have to exist).
 
 Options (default values can be overridden by environment variables):
 
@@ -449,8 +449,8 @@ Options (default values can be overridden by environment variables):
       to the engine executable.
       Default: \$T3_ENGINE, or 'podman' if installed, else 'docker'.
 
-  --mount=DIRECTORY, -m DIRECTORY
-      Absolute path of a working directory to bind-mount to a persistent
+  --mount=WORK_DIR, -m WORK_DIR
+      Path of a working directory to bind-mount to a persistent
       volume. The basename of this path is taken as the name of the
       persistent volume.
 
@@ -468,10 +468,10 @@ EOT
         USAGE=$(cat <<EOT
 
 Usage:
-  $(basename $0) unmount [--unmount|-u] DIRECTORY [option]...
+  $(basename $0) unmount [--unmount|-u] WORK_DIR [option]...
   $(basename $0) unmount [-h|--help]
 
-Unmounts a bind-mounted directory from the container volume.
+Unmounts a working directory from the container volume.
 
 Options (default values can be overridden by environment variables):
 
@@ -480,7 +480,7 @@ Options (default values can be overridden by environment variables):
       to the engine executable.
       Default: \$T3_ENGINE, or 'podman' if installed, else 'docker'.
 
-  --unmount=DIRECTORY, -u DIRECTORY
+  --unmount=WORK_DIR, -u WORK_DIR
       Absolute path of the directory to unmount from a persistent volume.
 
   --help, -h
@@ -514,12 +514,12 @@ Commands:
 
   env           Modifies the environment of a running TYPO3 container.
 
-  composer      Runs Composer in a running TYPO3 container.
+  composer      Executes a Composer command inside of a running TYPO3 container.
 
-  mount         Bind-mounts a directory to a container volume so that the
+  mount         Mounts a working directory to a container volume so that the
                 volume appears to be owned and can be managed by the current user.
 
-  unmount       Unmounts a bind-mouted directory from a container volume.
+  unmount       Unmounts a working directory from the container volume.
 
   --help, -h    Displays this text and exits. Displays command-specific help if 
                 combined with a command.
@@ -892,7 +892,7 @@ case "$CMD" in
         test -d "$DIR_PATH" || usage "Option '--unmount' is required"
         sudo --prompt 'sudo authorization is required for unmounting: ' \
             umount "$DIR_PATH" \
-        && echo "Directory '$DIR_PATH' unmounted from volume '$(basename "$DIR_PATH")'"    
+        && echo "Working directory '$DIR_PATH' unmounted from volume '$(basename "$DIR_PATH")'"    
         ;;
 
 
