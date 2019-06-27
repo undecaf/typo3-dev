@@ -193,20 +193,20 @@ mount_volume() {
 unmount_volume() {
     # Find the container volume mountpoint
     local VOL_MP
-    local BIND_MP
+    local LINE
+    local RE
 
     VOL_MP=$($T3_ENGINE volume inspect "$1" \
         --format='{{if eq .Name "'$1'"}}'$MP_FORMAT'{{end}}')
     # {{- ...}} and {{... -}} do no work here, therefore:
     VOL_MP=$(echo $VOL_MP)
 
-    # Find the directory bind-mounted at the container volume mountpoint
-    BIND_MP=$(mount | grep --fixed-strings "$VOL_MP on " 2>/dev/null | cut -d ' ' -f 3)
-
-    if [ -n "$BIND_MP" ]; then
+    # Find the directory bind-mounted to the container volume mountpoint
+    RE='^/.+( +[0-9]+){4}% +(/.+)$'
+    if LINE=$(df -P -l | grep --fixed-string "$VOL_MP ") && [[ "$LINE" =~ $RE ]]; then
         sudo --prompt 'sudo authorization is required for unmounting: ' \
-            umount "$BIND_MP" \
-        && echo "Working directory '$BIND_MP' unmounted from volume '$1'"    
+            umount "${BASH_REMATCH[2]}" \
+        && echo "Working directory '${BASH_REMATCH[2]}' unmounted from volume '$1'"    
     fi
 }
 
@@ -734,7 +734,7 @@ case $ENGINE_NAME in
         ;;
 esac
 
-# Volume names and mount points
+# Volume names and working directories
 T3_ROOT_MP=
 if is_path "$T3_ROOT"; then
     T3_ROOT_MP="$T3_ROOT"
