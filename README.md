@@ -528,7 +528,7 @@ __Container engine:__
 the same engine as for the corresponding `t3 run` command.
 Use option `-e` (or `T3_ENGINE`) if necessary.
 
-__Container name(s):__ 
+__Container name:__ 
 the same container name as for the corresponding `t3 run` command.
 Use option `-n` (or `T3_NAME`) if necessary.
 
@@ -550,7 +550,7 @@ __Container engine:__
 the same engine as for the corresponding `t3 run` command.
 Use option `-e` (or `T3_ENGINE`) if necessary.
 
-__Container name(s):__ 
+__Container name:__ 
 the same container name as for the corresponding `t3 run` command.
 Use option `-n` (or `T3_NAME`) if necessary.
 
@@ -575,7 +575,7 @@ __Container engine:__
 the same engine as for the corresponding `t3 run` command.
 Use option `-e` (or `T3_ENGINE`) if necessary.
 
-__Container name(s):__ 
+__Container name:__ 
 the same container name as for the corresponding `t3 run` command.
 Use option `-n` (or `T3_NAME`) if necessary.
 
