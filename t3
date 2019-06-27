@@ -92,11 +92,26 @@ is_path() {
 verify_dir() {
     if is_path "$1"; then
         # At least the parent directory must exist
-        readlink -f "$1" &>/dev/null || usage "Working directory '$1' does not have a parent"
+        [ -d $(dirname "$1") ] || usage "Working directory '$1' does not have a parent"
 
         # Mount point must be an empty directory
         [ -n "$(ls -A "$1" 2>/dev/null)" ] && usage "Working directory path '$1' is not an empty directory"
     fi
+}
+
+
+# --------------------------------------------------------------------------
+
+# Canonicalizes a path and echoes it to stdout.
+#
+# Arguments:
+#   $1  path to canonicalize
+#
+canonicalize() {
+    (
+        cd "$1"
+        pwd -P
+    )
 }
 
 
@@ -162,12 +177,13 @@ mount_volume() {
         sudo --prompt "sudo authorization is required for bind-mounting: " --validate
 
         # Determine UID and GID of the volume owner
-        VOL_UID=$($SUDO_PREFIX stat --format '%u' $VOL_MP)
-        VOL_GID=$($SUDO_PREFIX stat --format '%g' $VOL_MP)
+        # (options differ between Linux and BSD)
+        VOL_UID=$($SUDO_PREFIX stat --format '%u' $VOL_MP 2>/dev/null) || VOL_UID=$($SUDO_PREFIX stat -f '%u' $VOL_MP)
+        VOL_GID=$($SUDO_PREFIX stat --format '%g' $VOL_MP 2>/dev/null) || VOL_GID=$($SUDO_PREFIX stat -f '%g' $VOL_MP)
 
         # Create the directory if necessary
-        BIND_MP=$(readlink --canonicalize "$2")
-        mkdir -p "$BIND_MP"
+        mkdir -p "$2"
+        BIND_MP=$(canonicalize "$2")
 
         sudo bindfs \
             --map=$VOL_UID/$(id -u):@$VOL_GID/@$(id -g) \
