@@ -792,12 +792,13 @@ esac
 case "$CMD" in
 
     run)
-        # TODO: trap error and t3 stop
+        # Roll back if command fails or is interrupted
+        trap "{ set +x +e; } 2>/dev/null; echo '*** Command failed or interrupted, rolling back ***'; $0 stop -e '$T3_ENGINE' -n '$T3_NAME' --rm; exit 1" ERR SIGINT
 
         # Database container required?
         if [ -z "$T3_DB_TYPE" ]; then
             # No, just run the TYPO3 container
-            set -x
+            set -x -e
             $T3_ENGINE run \
                 --detach \
                 --name "$T3_NAME" \
@@ -810,37 +811,29 @@ case "$CMD" in
                 >/dev/null
 
         else
-            case "$ENGINE_NAME" in
-                podman|docker)
-                    # Share the network stack between database and TYPO3 container
-                    set -x -e
-                    "$ENGINE_NAME" run \
-                        --detach \
-                        --name "${T3_NAME}-db" \
-                        --hostname "$T3_HOSTNAME" \
-                        --volume "${DB_DATA}:/bitnami/${T3_DB_TYPE}" \
-                        --publish $T3_PORT:80 \
-                        --publish $DB_PORT:$DB_CONTAINER_PORT \
-                        $DB_CREDENTIALS \
-                        $@ \
-                        bitnami/${T3_DB_TYPE} \
-                        >/dev/null
+            # Share the network stack between database and TYPO3 container
+            set -x -e
+            "$ENGINE_NAME" run \
+                --detach \
+                --name "${T3_NAME}-db" \
+                --hostname "$T3_HOSTNAME" \
+                --volume "${DB_DATA}:/bitnami/${T3_DB_TYPE}" \
+                --publish $T3_PORT:80 \
+                --publish $DB_PORT:$DB_CONTAINER_PORT \
+                $DB_CREDENTIALS \
+                $@ \
+                bitnami/${T3_DB_TYPE} \
+                >/dev/null
 
-                    "$ENGINE_NAME" run \
-                        --detach \
-                        --name "$T3_NAME" \
-                        --network container:"${T3_NAME}-db" \
-                        --volume "$T3_ROOT:$T3_ROOTDIR" \
-                        $HOST_IP_OPT \
-                        $@ \
-                        $REPO_SLUG${T3_TAG:+:$T3_TAG} \
-                        >/dev/null
-                    ;;
-
-                *)
-                    usage "Unknown container engine: '$T3_ENGINE'"
-                    ;;
-            esac
+            "$ENGINE_NAME" run \
+                --detach \
+                --name "$T3_NAME" \
+                --network container:"${T3_NAME}-db" \
+                --volume "$T3_ROOT:$T3_ROOTDIR" \
+                $HOST_IP_OPT \
+                $@ \
+                $REPO_SLUG${T3_TAG:+:$T3_TAG} \
+                >/dev/null
         fi
 
         { set +x; } 2>/dev/null   # disable command echoing and do not echo this command
