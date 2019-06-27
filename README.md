@@ -604,6 +604,8 @@ This is equivalent to [`t3 run`](#t3-run) with a working directory path for `-v`
 except that the container does not need to be running (it does not even 
 have to exist).
 
+This command will ask for `sudo` authorization unless there are cached credentials.
+
 __Container engine:__
 the same engine as for the corresponding `t3 run` command.
 Use option `-e` (or `T3_ENGINE`) if necessary.
@@ -622,6 +624,9 @@ Unmounts a working directory from the container volume:
 ```bash
 $ t3 unmount [--unmount|-u] WORK_DIR [option]...
 ```
+
+This command will ask for `sudo` authorization unless there are cached credentials.
+
 __Container engine:__
 the same engine as for the corresponding `t3 run` command.
 Use option `-e` (or `T3_ENGINE`) if necessary.
