@@ -549,9 +549,7 @@ T3_TAG=${T3_TAG:-latest}
 T3_ROOT=${T3_ROOT:-typo3-root}
 T3_PORT=${T3_PORT:-127.0.0.1:8080}
 
-T3_ROOT_MP=
 DB_DATA=
-DB_DATA_MP=
 DB_PORT=
 REMOVE_STOPPED=
 DIR_PATH=
@@ -642,10 +640,6 @@ while [[ $# -gt 0 ]]; do
         --typo3-root=*)
             T3_ROOT="${1#--typo3-root=}"
             verify_dir "$T3_ROOT"
-            if is_path "$T3_ROOT"; then
-                T3_ROOT_MP="$T3_ROOT"
-                T3_ROOT=$(basename "$T3_ROOT")
-            fi
             shift
             ;;
 
@@ -659,10 +653,6 @@ while [[ $# -gt 0 ]]; do
         --db-data=*)
             DB_DATA="${1#--db-data=}"
             verify_dir "$DB_DATA"
-            if is_path "$DB_DATA"; then
-                DB_DATA_MP="$DB_DATA"
-                DB_DATA=$(basename "$DB_DATA")
-            fi
             shift
             ;;
 
@@ -744,6 +734,18 @@ case $ENGINE_NAME in
         ;;
 esac
 
+# Volume names and mount points
+T3_ROOT_MP=
+if is_path "$T3_ROOT"; then
+    T3_ROOT_MP="$T3_ROOT"
+    T3_ROOT=$(basename "$T3_ROOT")
+fi
+
+DB_DATA_MP=
+if is_path "$DB_DATA"; then
+    DB_DATA_MP="$DB_DATA"
+    DB_DATA=$(basename "$DB_DATA")
+fi
 
 # Database type-specific settings
 T3_DB_TYPE=$(autocomplete "$T3_DB_TYPE" mariadb postgresql)
