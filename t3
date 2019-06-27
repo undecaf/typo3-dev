@@ -231,19 +231,19 @@ unmount_volume() {
 
 # Stops a container if possible and logs this to stdout. Also logs if the
 # container was removed after being stopped. Will remove the container if
-# $REMOVE_STOPPED is set to anything non-empty.
+# $REMOVE_OPTION is set to anything non-empty.
 #
 # Arguments:
 #   $1  container name
 #
 # Environment:
 #   $T3_ENGINE
-#   $REMOVE_STOPPED
+#   $REMOVE_OPTION
 #
 stop_container() {
     if $T3_ENGINE stop "$1" &>/dev/null && echo "Container '$1' stopped"; then
         # Remove the container(s) if so requested
-        test -n "$REMOVE_STOPPED" && $T3_ENGINE container rm "$1" &>/dev/null
+        test -n "$REMOVE_OPTION" && $T3_ENGINE container rm "$1" &>/dev/null
 
         # Wait until the container was removed eventually
         sleep 1
@@ -567,7 +567,7 @@ T3_PORT=${T3_PORT:-127.0.0.1:8080}
 
 DB_DATA=
 DB_PORT=
-REMOVE_STOPPED=
+REMOVE_OPTION=
 DIR_PATH=
 
 while [[ $# -gt 0 ]]; do
@@ -694,7 +694,7 @@ while [[ $# -gt 0 ]]; do
 
         # Remove container(s) after being stopped
         --rm)
-            REMOVE_STOPPED=1
+            REMOVE_OPTION='--rm'
             shift
             ;;
 
@@ -735,7 +735,7 @@ ENGINE_NAME=$(basename $T3_ENGINE)
 case $ENGINE_NAME in
     docker)
         HOST_IP_ENV=
-        HOST_IP_OPT=
+        HOST_IP_OPTION=
         MP_FORMAT='{{.Mountpoint}}'
         CONTNAME_PROP='.Name'
         SUDO_PREFIX=sudo
@@ -743,7 +743,7 @@ case $ENGINE_NAME in
 
     podman)
         HOST_IP_ENV="HOST_IP=$(hostname -I | awk '{print $1}')"
-        HOST_IP_OPT="--env $HOST_IP_ENV"
+        HOST_IP_OPTION="--env $HOST_IP_ENV"
         MP_FORMAT='{{.MountPoint}}'
         CONTNAME_PROP='.Source'
         SUDO_PREFIX=
@@ -821,7 +821,8 @@ case "$CMD" in
                 --hostname "$T3_HOSTNAME" \
                 --volume "$T3_ROOT:$T3_ROOTDIR" \
                 --publish $T3_PORT:80 \
-                $HOST_IP_OPT \
+                $HOST_IP_OPTION \
+                $REMOVE_OPTION \
                 $@ \
                 $REPO_SLUG${T3_TAG:+:$T3_TAG} \
                 >/dev/null
@@ -837,6 +838,7 @@ case "$CMD" in
                 --publish $T3_PORT:80 \
                 --publish $DB_PORT:$DB_CONTAINER_PORT \
                 $DB_CREDENTIALS \
+                $REMOVE_OPTION \
                 $@ \
                 bitnami/${T3_DB_TYPE} \
                 >/dev/null
@@ -846,7 +848,8 @@ case "$CMD" in
                 --name "$T3_NAME" \
                 --network container:"${T3_NAME}-db" \
                 --volume "$T3_ROOT:$T3_ROOTDIR" \
-                $HOST_IP_OPT \
+                $HOST_IP_OPTION \
+                $REMOVE_OPTION \
                 $@ \
                 $REPO_SLUG${T3_TAG:+:$T3_TAG} \
                 >/dev/null
