@@ -428,7 +428,7 @@ inadvertent command invocation.
 
 __Container engine:__
 if you have both [Docker](https://www.docker.com/) and [Podman](https://podman.io/)
-installed then option `-e` lets you select `docker` or `podman`.
+installed then option `-e` lets you choose between `docker` and `podman`.
 Setting [host environment variable](#host-environment-variables) `T3_ENGINE`
 relieves you from repeating that option for each `t3` command.
 
@@ -452,7 +452,7 @@ A different name can be assigned by option `-v` (or `T3_ROOT`). That name _must
 not_ contain a `/`.
 
 The TYPO3 volume can be made available for editing in a working directory at the host:
-just specify the _directory path_ (it _must_ contain a `/`) for option `-v` (or `T3_ROOT`).
+just specify the _working directory path_ (it _must_ contain a `/`) for option `-v` (or `T3_ROOT`).
 This will have the following effects:
 
 1.  The working directory basename becomes the TYPO3 volume name.
@@ -686,7 +686,7 @@ thus establishing a consistent environment for all `t3` commands.
 | `T3_DB_USER` | Name of the TYPO3 database owner. | `t3` |
 | `T3_DB_PW` | Password of the TYPO3 database. | `t3` |
 | `T3_DB_ROOT_PW` | Password of the MariaDB root user. | `toor` |
-| `T3_TIMEZONE`<br>`T3_MODE`<br>`T3_COMPOSER_EXCLUDE`<br>`T3_PHP_...`<br>`T3_php_...` | Initial values for [container environment variables](#container-environment-variables) `TIMEZONE`, `MODE`, `COMPOSER_EXCLUDE`, `PHP_...` and `php_...`. | built-in default |
+| `T3_TIMEZONE`<br>`T3_MODE`<br>`T3_COMPOSER_EXCLUDE`<br>`T3_PHP_...`<br>`T3_php_...` | Initial values for [container environment variables](#container-environment-variables) `TIMEZONE`, `MODE`, `COMPOSER_EXCLUDE`, `PHP_...` and `php_...`. | empty |
 
 
 
@@ -694,7 +694,7 @@ thus establishing a consistent environment for all `t3` commands.
 
 These variables can get their initial values from 
 [host environment variables](#host-environment-variables) or 
-by the `t3 run --env` option; the `--env`option takes precedence.
+from the `t3 run --env` option; the `--env` option takes precedence.
 
 Except for `TIMEZONE`, these variables can be set or changed at runtime by
 the `t3 env` command.
