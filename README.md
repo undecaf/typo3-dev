@@ -141,7 +141,7 @@ exposed on `127.0.0.1:5432`, replace `-d maria` with `-d postgres`.
 Enter
 
 ```bash
-$ t3 stop
+$ t3 stop --
 ```
 
 to stop _both_ containers. If you wish to have the stopped containers removed, too,
@@ -159,14 +159,14 @@ all default to `t3`.
 
 ### Using an IDE
 
-In order to work on your TYPO3 installation in an IDE, the TYPO3 root needs to be
-exposed to a work directory in which the current user has all rights.
+In order to work on your TYPO3 installation in an IDE, the TYPO3 root directory needs to be
+exposed to a working directory in which the current user has all rights.
 
 This requires the [bindfs](https://bindfs.org/) (available for Debian-like and macOS hosts) utility to be installed from the repositories of your system.
 For macOS, [osxfuse](https://osxfuse.github.io/) is needed beforehand. See below
 for what is happening [behind the scenes](#behind-the-scenes).
 
-When starting TYPO3, specify the _absolute path_ of the desired work directory
+When starting TYPO3, specify the path of the desired working directory
 (e.g. `~/ide-workspace/typo3-root`) as the `-v` option to `t3 run`,
 i.e. in the simplest case
 
@@ -344,7 +344,7 @@ Unless configured differently by `t3 run` option `-P` or
 [host environment variable](#host-environment-variables) `T3_DB_PORT`,
 MariaDB is accessible at `127.0.0.1:3306` and PostgreSQL at `127.0.0.1:5432`.
 
-The [database credentials](#database-credentials) are also defined by host
+The [database credentials](#database-credentials) are defined by host
 environment variables.
 
 
@@ -448,8 +448,8 @@ you choose a different host interface and/or port.
 
 __TYPO3 volume and work directory:__
 The TYPO3 installation is saved in a persistent volume named `typo3-root`.
-A different name can be assigned by option `-v` (or `T3_ROOT`). That name must
-not contain a `/`.
+A different name can be assigned by option `-v` (or `T3_ROOT`). That name _must
+not_ contain a `/`.
 
 The TYPO3 volume can be made available for editing in a working directory at the host:
 just specify the _directory path_ (it _must_ contain a `/`) for option `-v` (or `T3_ROOT`).
@@ -491,7 +491,9 @@ host interface and/or port.
 __Container environment variables:__
 control the time zone inside the container, TYPO3 mode, PHP settings and Composer operation; see [this table](#container-environment-variables) for details.
 
-Use option `--env NAME=VALUE` to assign a value to a container environment variable.
+Use option `--env NAME=VALUE` or the corresponding
+[host environment variable](#host-environment-variables) to assign an initial value to a container environment variable; `--env` takes precedence.
+
 This option may appear multiple times. `--env` options must be the _last options_
 on the command line.
 
@@ -656,7 +658,7 @@ that environment variable is not set.
 | `--db-vol=VOLUME`<br>`-V VOLUME` | `run` | Database volume name; requires option `--db-type`.<br>Defaults: `$T3_DB_DATA`, or `typo3-data`. |
 | `--db-port=PORT`<br>`-P PORT` | `run` | Host interface (optional) and port where to publish the database port; requires option `--db-type`.<br> Defaults: `$T3_DB_PORT`, or `127.0.0.1:3306` for MariaDB and `127.0.0.1:5432` for PostgreSQL. |
 | `--rm` | `run`<br>`stop` | Causes the TYPO3 container and the respective database container (if one exists) to be removed after they were stopped. |
-| `--env NAME=VALUE` | `run` | Sets the (initial) value of a [container environment variable](#container-environment-variables). The values of most variables can be changed afterwards by `t3 env`.<br>This option may appear multiple times. `--env` options must be the _last options_ on the command line. |
+| `--env NAME=VALUE` | `run` | Sets the (initial) value of a [container environment variable](#container-environment-variables), eventually overriding the corresponding [host environment variable](#host-environment-variables). The values of most variables can be changed afterwards by `t3 env`.<br>This option may appear multiple times. `--env` options must be the _last options_ on the command line. |
 | `--mount=WORKDIR`<br>`-m WORKDIR` | `mount` | Path of a working directory to bind-mount to a persistent volume. The basename of this path is taken as the name of the persistent volume. |
 | `--unmount=WORKDIR`<br>`-u WORKDIR` | `unmount`| Absolute path of the directory to unmount from a persistent volume. |
 
@@ -664,8 +666,9 @@ that environment variable is not set.
 ### Host environment variables
 
 These variables can be set in the host shell and are intended for setting
-custom [option](#options) default values, thus establishing consistent option
-values for all `t3` commands.
+custom default values for [options](#options) and
+[container environment variables](#container-environment-variables),
+thus establishing a consistent environment for all `t3` commands.
 
 
 | Name | Description | Built-in default |
@@ -683,20 +686,25 @@ values for all `t3` commands.
 | `T3_DB_USER` | Name of the TYPO3 database owner. | `t3` |
 | `T3_DB_PW` | Password of the TYPO3 database. | `t3` |
 | `T3_DB_ROOT_PW` | Password of the MariaDB root user. | `toor` |
+| `T3_TIMEZONE`<br>`T3_MODE`<br>`T3_COMPOSER_EXCLUDE`<br>`T3_PHP_...`<br>`T3_php_...` | Initial values for [container environment variables](#container-environment-variables) `TIMEZONE`, `MODE`, `COMPOSER_EXCLUDE`, `PHP_...` and `php_...`. | built-in default |
 
 
 
 ### Container environment variables
 
-These variables can be set by the `t3 run --env` option. Except for `TIMEZONE`, they can be
-set or changed at runtime by the `t3 env` command.
+These variables can get their initial values from 
+[host environment variables](#host-environment-variables) or 
+by the `t3 run --env` option; the `--env`option takes precedence.
+
+Except for `TIMEZONE`, these variables can be set or changed at runtime by
+the `t3 env` command.
 
 | Name | Description | Built-in default |
 |------|-------------|------------------|
 | `TIMEZONE` | Sets the TYPO3 container timezone (e.g. `Europe/Vienna`). |Timezone of your current location, or else UTC. |
 | `MODE`| <dl><dt>`prod`</dt><dd>selects production mode: TYPO3 operating in „Production Mode“, no Apache/PHP signature headers, PHP settings as per     [`php.ini-production`](https://github.com/php/php-src/blob/master/php.ini-production)</dd><dt>`dev`</dt><dd>selects development mode: TYPO3 in „Development Mode“, verbose Apache/PHP signature headers, PHP settings as recommended by [`php.ini-development`](https://github.com/php/php-src/blob/master/php.ini-development)</dd><dt>`xdebug`</dt><dd>selects development mode as above and also enables [XDebug](https://xdebug.org/)</dd></dl> | `prod` |
 | `COMPOSER_EXCLUDE` | Colon-separated list of _subdirectories_ of `/var/www/localhost` which are to be excluded from the effects of [Composer operations](#composer).<br>This is intended e.g. to protect the current version of an extension you are developing from being overwritten by an older version stored in a repository.<br>These directories need to exist only by the time Composer is invoked. | empty |
-| `PHP_...` | Environment variables prefixed with `PHP_` or `php_` become `php.ini` settings with the prefix removed, e.g. `--env php_post_max_size=5M` becomes `post_max_size=5M`. These settings override prior settings and `MODE`. | none |
+| `PHP_...`<br>`php_...` | Environment variables prefixed with `PHP_` or `php_` become `php.ini` settings with the prefix removed, e.g. `--env php_post_max_size=5M` becomes `post_max_size=5M`. These settings override prior settings and `MODE`. | none |
 
 
 ## Credits
