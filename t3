@@ -735,6 +735,8 @@ case $ENGINE_NAME in
     docker)
         HOST_IP_ENV=
         HOST_IP_OPTION=
+        HOSTNAME_OPTION_T3=
+        HOSTNAME_OPTION_DB="--hostname $T3_HOSTNAME"
         MP_FORMAT='{{.Mountpoint}}'
         SUDO_PREFIX=sudo
         ;;
@@ -742,6 +744,8 @@ case $ENGINE_NAME in
     podman)
         HOST_IP_ENV="HOST_IP=$(hostname -I | awk '{print $1}')"
         HOST_IP_OPTION="--env $HOST_IP_ENV"
+        HOSTNAME_OPTION_T3="--hostname $T3_HOSTNAME"
+        HOSTNAME_OPTION_DB=
         MP_FORMAT='{{.MountPoint}}'
         SUDO_PREFIX=
         ;;
@@ -845,6 +849,7 @@ case "$CMD" in
                 --volume "${DB_DATA}:/bitnami/${T3_DB_TYPE}" \
                 --publish $T3_PORT:80 \
                 --publish $DB_PORT:$DB_CONTAINER_PORT \
+                $HOSTNAME_OPTION_DB \
                 $DB_CREDENTIALS \
                 $REMOVE_OPTION \
                 $@ \
@@ -854,9 +859,9 @@ case "$CMD" in
             "$ENGINE_NAME" run \
                 --detach \
                 --name "$T3_NAME" \
-                --hostname "$T3_HOSTNAME" \
                 --network container:"${T3_NAME}-db" \
                 --volume "$T3_ROOT:$T3_ROOTDIR" \
+                $HOSTNAME_OPTION_T3 \
                 $ENV_OPTIONS \
                 $HOST_IP_OPTION \
                 $REMOVE_OPTION \
