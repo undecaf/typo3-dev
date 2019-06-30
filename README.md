@@ -187,6 +187,8 @@ and container with the current user's UID/GID mapped to container UIDs/GIDs.
 
 Stopping the TYPO3 container will unmount the working directory automatically.
 
+__Podman users please note:__ working directories require at least Podman&nbsp;v1.4.3.
+
 
 #### Editing a stopped TYPO3 instance
 
@@ -652,7 +654,7 @@ that environment variable is not set.
 | `--name=NAME`<br>`-n NAME` | `run`<br>`stop`<br>`composer`<br>`env` | Container name. The database container name, if any, has `-db` appended to this name.<br>Default: `$T3_NAME`, or `typo3`. |
 | `--hostname=HOSTNAME`<br>`-h HOSTNAME` | `run` | Hostname assigned to the TYPO3 container and to Apache `ServerName` and `ServerAdmin`.<br>Default: `$T3_HOSTNAME`, or `typo3.$(hostname)`. |
 | `--tag=TAG`<br>`-t TAG` | `run` | Tag of image to run, consisting of TYPO3 version and build version, e.g. `8.7-1.3` or `9.5-latest`.<br> Default: `$T3_TAG`, or `latest`, i.e. the latest build for the most recent TYPO3 version. |
-| `--typo3-root=VOLUME`<br>`-v VOLUME` | `run` | Either a volume name to be mapped to the TYPO3 root directory inside the container, or a working directory path (containing a `/`).<br>In the latter case, the directory basename is used as the volume name, and the directory is bind-mounted at that volume. Thus, volume content appears to be owned by the current user.<br>Default: `$T3_ROOT`, or `typo3-root`. |
+| `--typo3-root=VOLUME`<br>`-v VOLUME` | `run` | Either a volume name to be mapped to the TYPO3 root directory inside the container, or a working directory path (containing a `/`).<br>In the latter case, the directory basename is used as the volume name, and the directory is bind-mounted at that volume. Thus, volume content appears to be owned by the current user.<br>__Podman users please note:__ working directories require at least Podman&nbsp;v1.4.3.<br>Default: `$T3_ROOT`, or `typo3-root`. |
 | `--typo3-port=PORT`<br>`-p PORT` | `run` | Host interface (optional) and port where to publish the TYPO3 HTTP port.<br>Default: `$T3_PORT`, or `127.0.0.1:8080`. |
 | `--db-type=TYPE`<br>`-d TYPE` | `run`| Type of database container: `mariadb` for MariaDB or `postgresql` for PostgreSQL (can be abbreviated). If empty then the SQLite instance of the TYPO3 container will be used.<br>Default: `$T3_DB_TYPE`, or empty. |
 | `--db-vol=VOLUME`<br>`-V VOLUME` | `run` | Database volume name; requires option `--db-type`.<br>Defaults: `$T3_DB_DATA`, or `typo3-data`. |

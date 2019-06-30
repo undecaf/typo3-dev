@@ -161,7 +161,7 @@ mount_volume() {
     if is_path "$2"; then
         if ! which bindfs &>/dev/null; then
             unset USAGE
-            usage "bindfs not installed, see https://bindfs.org/ for information"
+            usage "*** bindfs not installed, see https://bindfs.org/ for information ***"
         fi
 
         local BIND_MP
@@ -174,7 +174,7 @@ mount_volume() {
             || usage "Volume '$1' not found"
 
         # Acquire sudo authorization for what follows
-        sudo --prompt "sudo authorization is required for bind-mounting a working directory: " --validate
+        sudo --prompt $'\n*** sudo authorization is required for bind-mounting a working directory: ' --validate
 
         # Determine UID and GID of the volume owner
         # (options differ between Linux and BSD)
@@ -212,15 +212,14 @@ unmount_volume() {
     local LINE
     local RE
 
-    VOL_MP=$($T3_ENGINE volume inspect "$1" \
-        --format='{{if eq .Name "'$1'"}}'$MP_FORMAT'{{end}}')
+    VOL_MP=$($T3_ENGINE volume inspect "$1" --format=$MP_FORMAT)
     # {{- ...}} and {{... -}} do no work here, therefore:
     VOL_MP=$(echo $VOL_MP)
 
     # Find the directory bind-mounted to the container volume mountpoint
     RE='^/.+( +[0-9]+){4}% +(/.+)$'
     if LINE=$(df -P -l | grep --fixed-string "$VOL_MP ") && [[ "$LINE" =~ $RE ]]; then
-        sudo --prompt 'sudo authorization is required for unmounting a working directory: ' \
+        sudo --prompt $'\n*** sudo authorization is required for unmounting a working directory: ' \
             umount "${BASH_REMATCH[2]}" \
         && echo "Working directory '${BASH_REMATCH[2]}' unmounted from volume '$1'"    
     fi
@@ -737,7 +736,6 @@ case $ENGINE_NAME in
         HOST_IP_ENV=
         HOST_IP_OPTION=
         MP_FORMAT='{{.Mountpoint}}'
-        CONTNAME_PROP='.Name'
         SUDO_PREFIX=sudo
         ;;
 
@@ -745,7 +743,6 @@ case $ENGINE_NAME in
         HOST_IP_ENV="HOST_IP=$(hostname -I | awk '{print $1}')"
         HOST_IP_OPTION="--env $HOST_IP_ENV"
         MP_FORMAT='{{.MountPoint}}'
-        CONTNAME_PROP='.Source'
         SUDO_PREFIX=
         ;;
 esac
@@ -845,7 +842,6 @@ case "$CMD" in
             "$ENGINE_NAME" run \
                 --detach \
                 --name "${T3_NAME}-db" \
-                --hostname "$T3_HOSTNAME" \
                 --volume "${DB_DATA}:/bitnami/${T3_DB_TYPE}" \
                 --publish $T3_PORT:80 \
                 --publish $DB_PORT:$DB_CONTAINER_PORT \
@@ -858,6 +854,7 @@ case "$CMD" in
             "$ENGINE_NAME" run \
                 --detach \
                 --name "$T3_NAME" \
+                --hostname "$T3_HOSTNAME" \
                 --network container:"${T3_NAME}-db" \
                 --volume "$T3_ROOT:$T3_ROOTDIR" \
                 $ENV_OPTIONS \
@@ -880,8 +877,9 @@ case "$CMD" in
         # Collect volume names from container(s)
         VOLNAMES=
         for CONTNAME in "$T3_NAME"{,-db}; do
+            # Note: prior to Podman v1.4.3, the volume name was contained in property .Source, not .Name
             VOLNAMES="$VOLNAMES $($T3_ENGINE container inspect \
-                --format='{{range .Mounts}}{{if eq .Destination "'$T3_ROOTDIR'" "'$MARIADB_DATADIR'" "'$POSTGRESQL_DATADIR'"}}{{printf "%s " '$CONTNAME_PROP'}}{{end}}{{end}}' \
+                --format='{{range .Mounts}}{{if eq .Destination "'$T3_ROOTDIR'" "'$MARIADB_DATADIR'" "'$POSTGRESQL_DATADIR'"}}{{printf "%s " .Name}}{{end}}{{end}}' \
                 "$CONTNAME" 2>/dev/null)"
         done
 
@@ -917,7 +915,7 @@ case "$CMD" in
 
     unmount)
         test -d "$DIR_PATH" || usage "Option '--unmount' is required"
-        sudo --prompt 'sudo authorization is required for unmounting a working directory: ' \
+        sudo --prompt $'\n*** sudo authorization is required for unmounting a working directory: ' \
             umount "$DIR_PATH" \
         && echo "Working directory '$DIR_PATH' unmounted from volume '$(basename "$DIR_PATH")'"    
         ;;
