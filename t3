@@ -344,7 +344,7 @@ described above. If necessary, '--' can be used to separate them from the $(base
  
 EOT
         )
-        ALLOWED_OPTS='-d|--db-type(=.*)?|-e|--engine(=.+)?|-h|--hostname(=.+)?|-n|--name(=.+)?|-t|--tag(=.+)?|-v|--typo3-root(=.+)?|-V|--db-data(=.+)?|-p|--typo3-port(=.+)?|-P|--db-port(=.+)?|--rm|-h|--help'
+        ALLOWED_OPTS='-d|--db-type(=.*)?|-e|--engine(=.+)?|-h|--hostname(=.+)?|-n|--name(=.+)?|-t|--tag(=.+)?|-v|--typo3-root(=.+)?|-V|--db-data(=.+)?|-p|--typo3-port(=.+)?|-P|--db-port(=.+)?|--rm'
         ;;
 
 
@@ -382,7 +382,7 @@ Options (default values can be overridden by environment variables):
  
 EOT
         )
-        ALLOWED_OPTS='-e|--engine(=.+)?|-n|--name(=.+)?|--rm|-h|--help'
+        ALLOWED_OPTS='-e|--engine(=.+)?|-n|--name(=.+)?|--rm'
         ;;
 
 
@@ -411,7 +411,7 @@ Options (default values can be overridden by environment variables):
  
 EOT
         )
-        ALLOWED_OPTS='-e|--engine(=.+)?|-n|--name(=.+)?|-h|--help'
+        ALLOWED_OPTS='-e|--engine(=.+)?|-n|--name(=.+)?'
         ;;
 
 
@@ -440,7 +440,7 @@ Options (default values can be overridden by environment variables):
  
 EOT
         )
-        ALLOWED_OPTS='-e|--engine(=.+)?|-n|--name(=.+)?|-h|--help'
+        ALLOWED_OPTS='-e|--engine(=.+)?|-n|--name(=.+)?'
         ;;
 
 
@@ -476,7 +476,7 @@ Options (default values can be overridden by environment variables):
  
 EOT
         )
-        ALLOWED_OPTS='-e|--engine(=.+)?|-m|--mount(=.+)?|-h|--help'
+        ALLOWED_OPTS='-e|--engine(=.+)?|-m|--mount(=.+)?'
         ;;
 
 
@@ -505,7 +505,7 @@ Options (default values can be overridden by environment variables):
  
 EOT
         )
-        ALLOWED_OPTS='-e|--engine(=.+)?|-u|--unmount(=.+)?|-h|--help'
+        ALLOWED_OPTS='-e|--engine(=.+)?|-u|--unmount(=.+)?'
         ;;
 
 
@@ -570,6 +570,8 @@ DB_DATA=
 DB_PORT=
 REMOVE_OPTION=
 DIR_PATH=
+
+ALLOWED_OPTS="$ALLOWED_OPTS"'|-h|--help|--'
 
 while [[ $# -gt 0 ]]; do
     # Check for allowed options by regular expression
