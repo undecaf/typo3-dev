@@ -1,14 +1,15 @@
 #!/bin/sh
 
 # Show and save what is being built
-echo "Building TYPO3 ${TYPO3_VER}, container image: ${IMAGE_VER}"
+echo $'\n*************** '"Building TYPO3 ${TYPO3_VER}, container image: ${IMAGE_VER}, commit: $COMMIT"
 cat << EOF >> /etc/environment
 export TYPO3_VER=${TYPO3_VER}
 export IMAGE_VER=${IMAGE_VER}
 export BUILD_DATE='$(date -R)'
 EOF
 
-# Add repositories
+# Add extra repositories
+mkdir -p /etc/apk
 cat <<-EOF >> /etc/apk/repositories
 	http://dl-cdn.alpinelinux.org/alpine/edge/testing
 	http://dl-cdn.alpinelinux.org/alpine/edge/community
