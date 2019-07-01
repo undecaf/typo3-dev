@@ -81,6 +81,12 @@ Volume `typo3-root` persists the state of the TYPO3 installation
 independently of container lifetime.
 
 
+#### Online documentation
+
+In order to view the version of this README file that matches the version of
+the running TYPO3 instance, browse to `http://localhost:8080/readme.html`.
+
+
 ### `t3` shell script
 
 More complex setups (such as using an external database) require complex Docker
@@ -397,7 +403,12 @@ $ source my-t3-conf && t3 stop
 $ t3 COMMAND [option]...
 ```
 
-The `t3` script is avaliable for download [here](https://raw.githubusercontent.com/undecaf/typo3-dev/master/t3). Commands are described below.
+The `t3` script is avaliable for download
+[here](https://raw.githubusercontent.com/undecaf/typo3-dev/master/t3).
+In order to view the version of this document that matches a running TYPO3 instance, 
+point your browser to e.g. `http://localhost:8080/readme.html`.
+
+Commands are described below.
 
 
 ### Getting help

@@ -112,7 +112,7 @@ rm -rf $TYPO3_ROOT/htdocs $TYPO3_ROOT/cgi-bin
 
 # Link to the current Github README.md if the commit is known
 if [ -n "$COMMIT" ]; then
-    cat > $TYPO3_ROOT/readme.html <<EOF
+    cat > $TYPO3_DOCROOT/readme.html <<EOF
 <!doctype html>
 <html>
     <head>
