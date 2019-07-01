@@ -1,4 +1,4 @@
-# Developing for TYPO3 with Docker or Podman
+# Containerized TYPO3 – from quick start to extension development 
 
 [![Build Status](https://travis-ci.com/undecaf/typo3-dev.svg?branch=master)](https://travis-ci.com/undecaf/typo3-dev)
 
@@ -6,7 +6,9 @@ This project provides a containerized TYPO3 installation equivalent to
 [`composer require typo3/cms`](https://packagist.org/packages/typo3/cms) with
 [ImageMagick](https://www.imagemagick.org/) installed and configured for
 [Composer Mode](https://getcomposer.org/#Composer_Mode).
-The image is based on [Alpine Linux](https://alpinelinux.org/), Apache and PHP&nbsp;7 and is only 280&nbsp;MB in size.
+The image is based on [Alpine Linux](https://alpinelinux.org/), Apache and PHP&nbsp;7,
+is only 280&nbsp;MB in size and can run in [Docker](https://www.docker.com/) and
+[Podman](https://podman.io/).
 
 The TYPO3 container can be combined with a database container such as
 [MySQL or PostgreSQL](#using-mariadb-or-postgresql)
@@ -33,7 +35,7 @@ File access rights, ownerships, UIDs and GIDs are transparently and consistently
     -   [Quick start](#quick-start)
     -   [`t3` shell script](#t3-shell-script)
     -   [Quick start with `t3`](#quick-start-with-t3)
-    -   [MariaDB or PostgreSQL](#mariadb-or-postgresql)
+    -   [MariaDB and PostgreSQL](#mariadb-and-postgresql)
 -   [Developing for TYPO3](#developing-for-typo3)
     -   [Using an IDE](#using-an-ide)
     -   [Setting the container environment](#setting-the-container-environment)
@@ -77,7 +79,7 @@ Next, browse to `http://localhost:8080`. This starts the TYPO3 installation wiza
 When asked to select a database, choose `Manually configured SQLite connection` and
 continue through the remaining dialogs to the TYPO3 login dialog.
 
-Volume `typo3-root` persists the state of the TYPO3 installation
+Volume `typo3-root` persists the state of the TYPO3 instance
 independently of container lifetime.
 
 
@@ -127,7 +129,7 @@ State is preserved in volume `typo3-root` so that a subsequent `t3 run --`
 command will resume from where you left off.
 
 
-### MariaDB or PostgreSQL
+### MariaDB and PostgreSQL
 
 MariaDB or PostgreSQL is optional for TYPO3&nbsp;v9.5+ but is required for TYPO3&nbsp;v8.7.
 
@@ -163,14 +165,21 @@ all default to `t3`.
 
 ## Developing for TYPO3
 
+The following sections describes how this project can aid in customizing or 
+developing TYPO3 extensions or otherwise altering the source code of your TYPO3
+installation.
+
 ### Using an IDE
 
 In order to work on your TYPO3 installation in an IDE, the TYPO3 root directory needs to be
-exposed to a working directory in which the current user has all rights.
+exposed to a working directory where the current user has sufficient (read and write)
+permissions. At the container volume mount point, this is usually not the case.
 
-This requires the [bindfs](https://bindfs.org/) (available for Debian-like and macOS hosts) utility to be installed from the repositories of your system.
-For macOS, [osxfuse](https://osxfuse.github.io/) is needed beforehand. See below
-for what is happening [behind the scenes](#behind-the-scenes).
+`t3` uses the [bindfs](https://bindfs.org/) utility  (available for Debian-like and
+macOS hosts) to solve this problem. See below for what is happening [behind the scenes](#behind-the-scenes).
+
+First, [bindfs](https://bindfs.org/) needs to be installed from the repositories
+of your system. For macOS, [osxfuse](https://osxfuse.github.io/) is required beforehand.
 
 When starting TYPO3, specify the path of the desired working directory
 (e.g. `~/ide-workspace/typo3-root`) as the `-v` option to `t3 run`,
@@ -187,7 +196,7 @@ This will
 -   make the TYPO3 volume content appear in the working directory
     (`~/ide-workspace/typo3-root`) as if it were owned by the current user.
 
-Thus, the TYPO3 installation can now be edited in the IDE. File changes,
+Thus, the TYPO3 instance can now be edited in the IDE. File changes,
 creates and deletes will be passed in both directions between working directory
 and container with the current user's UID/GID mapped to container UIDs/GIDs.
 
@@ -198,13 +207,16 @@ __Podman users please note:__ working directories require at least Podman&nbsp;v
 
 #### Editing a stopped TYPO3 instance
 
-Whenever there is a persistent TYPO3 volume, you can edit that TYPO3 installation
+Whenever there is a persistent TYPO3 volume, you can edit that TYPO3 instance
 even if the container is not running or does not even exist. Just mount your 
 working directory on top of the volume:
 
 ```bash
 $ t3 mount -m ~/ide-workspace/typo3-root
 ```
+
+As with [`t3 run -v`](#using-an-ide), the name of the volume is the working
+directory basename.
 
 When you are finished, unmount your working directory again:
 
@@ -217,7 +229,7 @@ $ t3 unmount -u ~/ide-workspace/typo3-root
 The TYPO3 root directory is accessible outside of the container at the volume mount
 point of e.g. `typo3-root` which can be obtained by `inspect`ing
 the container. The files, however, are owned by a system account and cannot be edited
-by the current user:
+by the current user, e.g.:
 
 ```bash
 $ sudo ls -nA $(sudo docker volume inspect --format '{{.Mountpoint}}' typo3-root)
@@ -283,7 +295,7 @@ running Composer because it might slow down Composer significantly.
 
 If you are continuing development of an extension which is already available
 from a repository, then running `t3 composer update` may overwrite your changes
-with the (older) version of the extension from the repository.
+with the (older) version of that extension from the repository.
 
 In order to prevent this, set the 
 [container environment variable](#container-environment-variables) 
@@ -460,7 +472,7 @@ TYPO3 is served at `127.0.0.1:8080` by default. Option `-p` (or `T3_PORT`) lets
 you choose a different host interface and/or port.
 
 __TYPO3 volume and work directory:__
-The TYPO3 installation is saved in a persistent volume named `typo3-root`.
+The TYPO3 instance is saved in a persistent volume named `typo3-root`.
 A different name can be assigned by option `-v` (or `T3_ROOT`). That name _must
 not_ contain a `/`.
 
