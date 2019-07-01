@@ -110,6 +110,20 @@ chown $APACHE_USER: $TYPO3_DOCROOT/FIRST_INSTALL
 sed -i "s#/var/www/localhost/htdocs#$TYPO3_DOCROOT#" /etc/apache2/httpd.conf
 rm -rf $TYPO3_ROOT/htdocs $TYPO3_ROOT/cgi-bin
 
+# Link to the current Github README.md if the commit is known
+if [ -n "$COMMIT" ]; then
+    cat > $TYPO3_ROOT/readme.html <<EOF
+<!doctype html>
+<html>
+    <head>
+        <meta http-equiv="refresh" content="0; URL='https://github.com/undecaf/typo3-dev/tree/${COMMIT}#developing-for-typo3-with-docker-or-podman'" />
+    </head>
+    <body>
+    </body>
+</html>
+EOF
+fi
+
 # Make everything in Apache homedir accessible by Apache
 find $APACHE_HOME -type d -exec chmod 755 {} \;
 chown -R $APACHE_USER: $APACHE_HOME
