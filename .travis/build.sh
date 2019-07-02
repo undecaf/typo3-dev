@@ -6,6 +6,7 @@ else
     export IMAGE_VER=$TRAVIS_BRANCH
 fi
 
+echo
 echo '*************** '"TRAVIS_BRANCH: '$TRAVIS_BRANCH'"
 echo '*************** '"TRAVIS_COMMIT: '$TRAVIS_COMMIT'"
 echo '*************** '"TRAVIS_TAG: '$TRAVIS_TAG'"
@@ -22,9 +23,6 @@ docker build \
     .
 
 set +x
-
-#    --pull \
-#    --cache-from $TRAVIS_REPO_SLUG \
 
 for T in $(.travis/tags.sh); do 
     echo '*************** '"Tagging $TRAVIS_REPO_SLUG as $TRAVIS_REPO_SLUG:$T"

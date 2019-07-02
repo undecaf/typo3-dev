@@ -1,13 +1,13 @@
 #!/bin/bash
 
 for T in $(.travis/tags.sh); do 
-    echo '*************** '"Pushing $TRAVIS_REPO_SLUG:$T"
+    echo $'\n*************** '"Pushing $TRAVIS_REPO_SLUG:$T"
     docker push $TRAVIS_REPO_SLUG:$T
 done
 exit
 
 # README.md exceeds the capabilities of Dockerhub, has to be updated manually
-echo '*************** Pushing README.md'
+echo $'\n*************** Pushing README.md'
 docker run --rm \
     -v $(readlink -f README.md):/data/README.md \
     -e DOCKERHUB_USERNAME="$REGISTRY_USER" \
