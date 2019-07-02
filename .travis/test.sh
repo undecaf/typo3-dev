@@ -28,7 +28,7 @@ RE='^([0-9]+\.[0-9]+)(\..+)?'
 set -e
 
 # Will stop any configuration
-trap './t3 stop --rm' EXIT
+trap './t3 stop --rm; docker volume rm typo3-root typo3-data & >/dev/null' EXIT
 
 # TYPO3 standalone
 t3 run -t $TAG
@@ -43,19 +43,19 @@ t3 stop --rm
 [ $(count_containers 'typo3(-db)?') -eq 0 ] || exit 1
 [ $(count_volumes 'typo3-root') -eq 1 ] || exit 1
 
-docker volume rm typo3-root
+docker volume rm typo3-root >/dev/null
 
-# TYPO3 + MariaDB
-t3 run -d mariadb -t $TAG
+# TYPO3 + MariaDB/PostgreSQL
+for DB_TYPE in mariadb postgresql; do
+    t3 run -d $DB_TYPE -t $TAG
 
-[ $(count_containers 'typo3(-db)?') -eq 2 ] || exit 1
-[ $(count_volumes 'typo3-(root|data)') -eq 2 ] || exit 1
+    [ $(count_containers 'typo3(-db)?') -eq 2 ] || exit 1
+    [ $(count_volumes 'typo3-(root|data)') -eq 2 ] || exit 1
 
-t3 stop --rm
+    t3 stop --rm
 
-[ $(count_containers 'typo3(-db)?') -eq 0 ] || exit 1
-[ $(count_volumes 'typo3-(root|data)') -eq 2 ] || exit 1
+    [ $(count_containers 'typo3(-db)?') -eq 0 ] || exit 1
+    [ $(count_volumes 'typo3-(root|data)') -eq 2 ] || exit 1
 
-docker volume rm typo3-root
-docker volume rm typo3-data
-
+    docker volume rm typo3-root typo3-data >/dev/null
+done
