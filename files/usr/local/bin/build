@@ -125,7 +125,7 @@ if [ -n "$COMMIT" ]; then
 EOF
 
     # Keep the document out of the VOLUME so that it does not get pinned
-    ln -s $APACHE_HOME/readme.html $TYPO3_ROOT/
+    ln -s $APACHE_HOME/readme.html $TYPO3_DOCROOT/
 fi
 
 # Make everything in Apache homedir accessible by Apache
