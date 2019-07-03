@@ -10,9 +10,9 @@ EOF
 
 # Add extra repositories
 mkdir -p /etc/apk
-cat <<-EOF >> /etc/apk/repositories
-	http://dl-cdn.alpinelinux.org/alpine/edge/testing
-	http://dl-cdn.alpinelinux.org/alpine/edge/community
+cat >> /etc/apk/repositories <<EOF
+http://dl-cdn.alpinelinux.org/alpine/edge/testing
+http://dl-cdn.alpinelinux.org/alpine/edge/community
 EOF
 
 # Install basics

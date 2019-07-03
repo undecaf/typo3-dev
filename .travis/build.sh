@@ -2,13 +2,13 @@
 
 source .travis/tags
 
-echo
 echo '*************** '"TRAVIS_BRANCH: '$TRAVIS_BRANCH'"
 echo '*************** '"TRAVIS_COMMIT: '$TRAVIS_COMMIT'"
 echo '*************** '"TRAVIS_TAG: '$TRAVIS_TAG'"
 echo '*************** '"TYPO3_VER: '$TYPO3_VER'"
 echo '*************** '"IMAGE_VER: '$IMAGE_VER'"
 echo '*************** '"TAGS: '$TAGS'"
+echo
 
 LOCAL_TAG=localhost/${TRAVIS_REPO_SLUG#*/}
 
