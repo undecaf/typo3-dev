@@ -15,7 +15,8 @@ LOCAL_TAG=localhost/${TRAVIS_REPO_SLUG#*/}
 set -x
 
 docker build \
-    --no-cache \
+    --pull \
+    --cache-from $TRAVIS_REPO_SLUG \
     --build-arg COMMIT=$TRAVIS_COMMIT \
     --build-arg TYPO3_VER=$TYPO3_VER \
     --build-arg IMAGE_VER=$IMAGE_VER \

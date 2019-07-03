@@ -9,6 +9,9 @@ env:
     - TYPO3_VER=8.7
     - TYPO3_VER=9.5 VERY_LAST=true
 
+before_script:
+  - docker pull $TRAVIS_REPO_SLUG || true
+
 script:
   - .travis/build.sh
   - .travis/test.sh
