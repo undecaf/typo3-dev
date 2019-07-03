@@ -8,7 +8,7 @@ This project provides a containerized TYPO3 installation equivalent to
 [Composer Mode](https://getcomposer.org/#Composer_Mode).
 The image is based on [Alpine Linux&nbsp;3.10](https://alpinelinux.org/),
 Apache&nbsp;2.4 and PHP&nbsp;7.3,
-is only 280&nbsp;MB in size and can run in [Docker](https://www.docker.com/) and
+is less than 300&nbsp;MB in size and can run in [Docker](https://www.docker.com/) and
 [Podman](https://podman.io/).
 
 The TYPO3 container can be combined with a database container such as
