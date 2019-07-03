@@ -13,7 +13,7 @@ is only 280&nbsp;MB in size and can run in [Docker](https://www.docker.com/) and
 The TYPO3 container can be combined with a database container such as
 [MySQL or PostgreSQL](#using-mariadb-or-postgresql)
 but also can be run independently due to the built-in SQLite database.
-Setting up and managing these scenarios is simplified by a shell script.
+Setting up and managing these scenarios is simplified by a shell script for Linux and macOS.
 
 You can use your favorite IDE on the host to
 [develop for TYPO3](#developing-for-typo3) in the container,

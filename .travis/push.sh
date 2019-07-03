@@ -1,15 +1,9 @@
 #!/bin/bash
 
-TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'$REGISTRY_USER'", "password": "'$REGISTRY_PASS'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+source .travis/tags
 
-for T in $(.travis/tags.sh); do 
+for T in $TAGS; do 
     echo $'\n*************** '"Pushing $TRAVIS_REPO_SLUG:$T"
-
-    # Delete the tag then push it
-    curl 'https://hub.docker.com/v2/repositories/$TRAVIS_REPO_SLUG/tags/$T/' \
-        -X DELETE \
-        -H "Authorization: JWT ${TOKEN}"
-
     docker push $TRAVIS_REPO_SLUG:$T
 done
 

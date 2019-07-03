@@ -20,42 +20,42 @@ count_volumes() {
 
 echo $'\n********************* Testing'
 
-# TODO: Use the tag that was just built
-# Extract MAJOR.MINOR of $TRAVIS_TAG
-RE='^([0-9]+\.[0-9]+)(\..+)?'
-[[ "$TRAVIS_TAG" =~ $RE ]] && TAG=$TYPO3_VER-${BASH_REMATCH[1]} || TAG=${TYPO3_VER}-latest
+source .travis/tags
 
 set -e
 
 # Will stop any configuration
 trap './t3 stop --rm; docker volume rm typo3-root typo3-data & >/dev/null' EXIT
 
-# TYPO3 standalone
-t3 run -t $TAG
+# Run tests only for the first tag since all images tagged in this build are identical
+for T in $TAGS; do
+    # TYPO3 standalone
+    t3 run -t $T
 
-[ $(count_containers 'typo3') -eq 1 ] || exit 1
-[ $(count_containers 'typo3-db') -eq 0 ] || exit 1
-[ $(count_volumes 'typo3-root') -eq 1 ] || exit 1
-[ $(count_volumes 'typo3-data') -eq 0 ] || exit 1
-
-t3 stop --rm
-
-[ $(count_containers 'typo3(-db)?') -eq 0 ] || exit 1
-[ $(count_volumes 'typo3-root') -eq 1 ] || exit 1
-
-docker volume rm typo3-root >/dev/null
-
-# TYPO3 + MariaDB/PostgreSQL
-for DB_TYPE in mariadb postgresql; do
-    t3 run -d $DB_TYPE -t $TAG
-
-    [ $(count_containers 'typo3(-db)?') -eq 2 ] || exit 1
-    [ $(count_volumes 'typo3-(root|data)') -eq 2 ] || exit 1
+    test $(count_containers 'typo3') -eq 1
+    test $(count_containers 'typo3-db') -eq 0
+    test $(count_volumes 'typo3-root') -eq 1
+    test $(count_volumes 'typo3-data') -eq 0
 
     t3 stop --rm
 
-    [ $(count_containers 'typo3(-db)?') -eq 0 ] || exit 1
-    [ $(count_volumes 'typo3-(root|data)') -eq 2 ] || exit 1
+    test $(count_containers 'typo3(-db)?') -eq 0
+    test $(count_volumes 'typo3-root') -eq 1
 
-    docker volume rm typo3-root typo3-data >/dev/null
+    docker volume rm typo3-root >/dev/null
+
+    # TYPO3 + MariaDB/PostgreSQL
+    for DB_TYPE in mariadb postgresql; do
+        t3 run -d $DB_TYPE -t $T
+
+        test $(count_containers 'typo3(-db)?') -eq 2
+        test $(count_volumes 'typo3-(root|data)') -eq 2
+
+        t3 stop --rm
+
+        test $(count_containers 'typo3(-db)?') -eq 0
+        test $(count_volumes 'typo3-(root|data)') -eq 2
+
+        docker volume rm typo3-root typo3-data >/dev/null
+    done
 done
