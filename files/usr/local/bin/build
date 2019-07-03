@@ -111,9 +111,9 @@ chown $APACHE_USER: $TYPO3_DOCROOT/FIRST_INSTALL
 sed -i "s#/var/www/localhost/htdocs#$TYPO3_DOCROOT#" /etc/apache2/httpd.conf
 rm -rf $TYPO3_ROOT/htdocs $TYPO3_ROOT/cgi-bin
 
-# Link to the current Github README.md if the commit is known
+# Provide a document whichs links to the current Github README.md
 if [ -n "$COMMIT" ]; then
-    cat > $TYPO3_DOCROOT/readme.html <<EOF
+    cat > $APACHE_HOME/readme.html <<EOF
 <!doctype html>
 <html>
     <head>
@@ -123,6 +123,9 @@ if [ -n "$COMMIT" ]; then
     </body>
 </html>
 EOF
+
+    # Keep the document out of the VOLUME so that it does not get pinned
+    ln -s $APACHE_HOME/readme.html $TYPO3_ROOT/
 fi
 
 # Make everything in Apache homedir accessible by Apache
