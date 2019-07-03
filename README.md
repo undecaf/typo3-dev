@@ -338,8 +338,9 @@ lists recommended plugins for various browsers.
 
 #### Activate XDebug in the container
 
-Unless the container was started with `--env MODE=xdebug`, this mode
-needs to be activated now:
+Unless the container was started already with `--env MODE=xdebug` or
+[host environment variable](#host-environment-variables) `T3_MODE=xdebug`,
+this mode needs to be activated now:
 
 ```bash
 $ t3 env MODE=xdebug
@@ -376,7 +377,7 @@ To have multiple TYPO3 instances coexist, each instance must have
     and `-V`).
 
 If you wish to _run_ multiple TYPO3 instances simultaneously then each instance must
-be mapped to unique host ports (`t3 run` options `-p` and `-P`).
+be mapped also to unique host ports (`t3 run` options `-p` and `-P`).
 [Debugging](#debugging-with-xdebug) is possible in one instance at a time only.
 
 Each `t3 stop`, `t3 composer` and `t3 env` command must be given an 
@@ -415,8 +416,8 @@ $ source my-t3-conf && t3 stop
 $ t3 COMMAND [option]...
 ```
 
-The `t3` script is avaliable for download
-[here](https://raw.githubusercontent.com/undecaf/typo3-dev/master/t3).
+The `t3` script is
+[avaliable for download here](https://raw.githubusercontent.com/undecaf/typo3-dev/master/t3).
 In order to view the version of this document that matches a running TYPO3 instance, 
 point your browser to e.g. `http://localhost:8080/readme.html`.
 
