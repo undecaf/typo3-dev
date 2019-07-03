@@ -1,4 +1,4 @@
-FROM alpine:3.9
+FROM alpine:3.10
 LABEL maintainer="Ferdinand Kasper <fkasper@modus-operandi.at>"
 
 ARG COMMIT
