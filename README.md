@@ -6,7 +6,8 @@ This project provides a containerized TYPO3 installation equivalent to
 [`composer require typo3/cms`](https://packagist.org/packages/typo3/cms) with
 [ImageMagick](https://www.imagemagick.org/) installed and configured for
 [Composer Mode](https://getcomposer.org/#Composer_Mode).
-The image is based on [Alpine Linux](https://alpinelinux.org/), Apache and PHP&nbsp;7,
+The image is based on [Alpine Linux&nbsp;3.10](https://alpinelinux.org/),
+Apache&nbsp;2.4 and PHP&nbsp;7.3,
 is only 280&nbsp;MB in size and can run in [Docker](https://www.docker.com/) and
 [Podman](https://podman.io/).
 
