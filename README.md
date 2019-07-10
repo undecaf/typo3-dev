@@ -8,13 +8,13 @@ This project provides a containerized TYPO3 installation equivalent to
 [Composer Mode](https://getcomposer.org/#Composer_Mode).
 The image is based on [Alpine Linux&nbsp;3.10](https://alpinelinux.org/),
 Apache&nbsp;2.4 and PHP&nbsp;7.3,
-is less than 300&nbsp;MB in size and can run in [Docker](https://www.docker.com/) and
+takes less than 300&nbsp;MB and can run in [Docker](https://www.docker.com/) and
 [Podman](https://podman.io/).
 
 The TYPO3 container can be combined with a database container such as
 [MySQL or PostgreSQL](#using-mariadb-or-postgresql)
 but also can be run independently due to the built-in SQLite database.
-Setting up and managing these scenarios is simplified by a shell script for Linux and macOS.
+Setting up and managing such scenarios is simplified by a shell script for Linux and macOS.
 
 You can use your favorite IDE on the host to
 [develop for TYPO3](#developing-for-typo3) in the container,
@@ -97,7 +97,10 @@ or Podman command lines.
 
 In order to simplify usage, the
 [`t3` shell script](https://raw.githubusercontent.com/undecaf/typo3-dev/master/t3)
-has been provided for Linux and macOS. It lets you:
+has been provided for Linux and macOS.
+This script is
+[avaliable for download here](https://raw.githubusercontent.com/undecaf/typo3-dev/master/t3).
+ It lets you:
 -   configure and run a TYPO3 container plus an optional database container;
 -   stop these containers and optionally remove them;
 -   map the TYPO3 root in the container to a working directory;
@@ -742,6 +745,10 @@ TODO
 ## Licenses
 
 Scripts in this repository are licensed under the GPL&nbsp;3.0.
+
 This document is licensed under the Creative Commons license CC&nbsp;BY-SA&nbsp;3.0.
-For licenses regarding container images, please refer to 
+
+As for any pre-built image usage, it is the image user's responsibility to ensure that any use of this image
+complies with any relevant licenses for all software contained within.
+More information on this subject may be found in
 [this discussion](https://opensource.stackexchange.com/questions/7013/license-for-docker-images#answer-7015).
