@@ -1,6 +1,8 @@
 # Containerized TYPO3 – from quick start to extension development 
 
 [![Build Status](https://travis-ci.com/undecaf/typo3-dev.svg?branch=master)](https://travis-ci.com/undecaf/typo3-dev)
+[![Latest release](https://img.shields.io/github/release/undecaf/typo3-dev.svg)](https://github.com/undecaf/typo3-dev)
+![Image Size](https://img.shields.io/microbadger/image-size/undecaf/typo3-dev/latest.svg)
 
 This project provides a containerized TYPO3 installation equivalent to
 [`composer require typo3/cms`](https://packagist.org/packages/typo3/cms) with
@@ -8,8 +10,8 @@ This project provides a containerized TYPO3 installation equivalent to
 [Composer Mode](https://getcomposer.org/#Composer_Mode).
 The image is based on [Alpine Linux&nbsp;3.10](https://alpinelinux.org/),
 Apache&nbsp;2.4 and PHP&nbsp;7.3,
-takes less than 300&nbsp;MB and can run in [Docker](https://www.docker.com/) and
-[Podman](https://podman.io/).
+uses less than 300&nbsp;MB disk space and can run in
+[Docker](https://www.docker.com/) and [Podman](https://podman.io/).
 
 The TYPO3 container can be combined with a database container such as
 [MySQL or PostgreSQL](#using-mariadb-or-postgresql)
