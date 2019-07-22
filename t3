@@ -797,7 +797,6 @@ case "$T3_DB_TYPE" in
 
     postgresql)
         DB_IMAGE=docker.io/yobasystems/alpine-postgres
-DB_IMAGE=localhost/alpine-postgres
         DB_CONTAINER_PORT=5432
         DB_DIR=$POSTGRESQL_DATADIR
         DB_DATA=${DB_DATA:-${T3_DB_DATA:-typo3-data}}
