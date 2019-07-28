@@ -5,21 +5,34 @@ echo $'\n*************** '"Building TYPO3 ${TYPO3_VER}, container image: ${IMAGE
 cat << EOF >> /etc/environment
 export TYPO3_VER=${TYPO3_VER}
 export IMAGE_VER=${IMAGE_VER}
-export BUILD_DATE='$(date -R)'
+export BUILD_DATE='${BUILD_DATE:-$(date --utc +'%Y-%m-%dT%H:%M:%SZ')}'
 EOF
 
 # Add extra repositories
 mkdir -p /etc/apk
 cat >> /etc/apk/repositories <<EOF
-http://dl-cdn.alpinelinux.org/alpine/edge/testing
 http://dl-cdn.alpinelinux.org/alpine/edge/community
 EOF
+
+# Build locale support, see https://github.com/Auswaschbar/alpine-localized-docker
+export MUSL_LOCPATH="/usr/share/i18n/locales/musl"
+apk --no-cache add libintl
+apk --no-cache --virtual .locale_build add cmake make musl-dev gcc gettext-dev git
+git clone https://gitlab.com/rilian-la-te/musl-locales
+cd musl-locales
+cmake -DLOCALE_PROFILE=OFF -DCMAKE_INSTALL_PREFIX:PATH=/usr .
+make
+make install
+cd ..
+rm -r musl-locales
+apk del .locale_build
 
 # Install basics
 apk update
 apk upgrade
 apk add \
 	bash \
+    su-exec \
 	nano \
     gettext \
 	tzdata \
@@ -28,6 +41,13 @@ apk add \
 	openssl \
     rsync \
     jq
+
+# Install PostgreSQL
+apk add \
+    postgresql \
+    postgresql-contrib \
+    libpq \
+    postgresql-client
 
 # Install Apache and PHP
 apk add \

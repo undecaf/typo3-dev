@@ -17,6 +17,7 @@ set -x
 docker build \
     --pull \
     --cache-from $TRAVIS_REPO_SLUG \
+    --build-arg BUILD_DATE=$(date --utc +'%Y-%m-%dT%H:%M:%SZ') \
     --build-arg COMMIT=$TRAVIS_COMMIT \
     --build-arg TYPO3_VER=$TYPO3_VER \
     --build-arg IMAGE_VER=$IMAGE_VER \

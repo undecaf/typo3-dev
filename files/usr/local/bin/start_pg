@@ -1,0 +1,40 @@
+#!/bin/bash
+
+#
+# Starts PostgreSQL with the requested configuration
+#
+
+# Use the same environment as during build
+. /etc/environment
+
+# Set up PostgreSQL directories
+mkdir -p $PGDATA $PGRUN
+chown -R ${PGUSER}: $PGDATA $PGRUN
+
+# Initialize PostgreSQL
+PWFILE=$(mktemp -u)
+trap "rm -f $PWFILE" EXIT
+echo "$T3_DB_ROOT_PW" >$PWFILE
+su-exec $PGUSER initdb --auth=md5 --pwfile=$PWFILE
+
+# Create the TYPO3 database unless it is named 'postgres'
+test "$T3_DB_NAME" = postgres || \
+    echo "CREATE DATABASE $T3_DB_NAME;" | \
+    su-exec $PGUSER postgres --single -j >/dev/null
+
+# Set the password for the TYPO3 user and grant superuser privileges
+ACTION=CREATE
+test "$T3_DB_USER" = postgres && ACTION=ALTER
+
+echo "$ACTION USER $T3_DB_USER WITH SUPERUSER PASSWORD '$T3_DB_PW';" | \
+    su-exec $PGUSER postgres --single -j >/dev/null
+
+# Allow external IPv4 and IPv6 connections
+cat << EOF >>$PGDATA/pg_hba.conf
+ 
+host  all  all  0.0.0.0/0  md5
+host  all  all  ::0/0      md5
+EOF
+
+# Start PostgreSQL
+su-exec $PGUSER postgres -c 'listen_addresses=*' &

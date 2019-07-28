@@ -29,8 +29,11 @@ if [ $$ -eq 1 ]; then
         echo "Timezone: UTC"
     fi
 
-    # Clean up Apache PID files
-    rm -f /run/apache2/apache2.pid /run/apache2/httpd.pid
+    # Show locale
+    echo "Locale: $LANG"
+    
+    # Start PostgreSQL
+    start_pg
 fi
 
 # Set up developer/XDebug/production mode
