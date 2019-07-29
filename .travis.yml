@@ -36,10 +36,4 @@ deploy:
     script: .travis/push.sh
     skip_cleanup: true
     on:
-      branch: all-in-one
-
-  - provider: script
-    script: .travis/push.sh
-    skip_cleanup: true
-    on:
       tags: true

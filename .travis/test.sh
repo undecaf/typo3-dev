@@ -29,19 +29,18 @@ trap './t3 stop --rm; docker volume rm typo3-root typo3-data & >/dev/null' EXIT
 
 # Run tests
 for T in $TAGS; do
-    # TYPO3 standalone (only for TYPO3 v9.5)
+    # TYPO3 + SQLite (only for TYPO3 v9.5)
     if [ "$TYPO3_VER" = '9.5' ]; then
-        echo $'\n*************** '"$TRAVIS_REPO_SLUG:$T standalone"
+        echo $'\n*************** '"$TRAVIS_REPO_SLUG:$T with SQLite"
         t3 run -t $T
 
         test $(count_containers 'typo3') -eq 1
-        test $(count_containers 'typo3-db') -eq 0
         test $(count_volumes 'typo3-root') -eq 1
         test $(count_volumes 'typo3-data') -eq 0
 
         t3 stop --rm
 
-        test $(count_containers 'typo3(-db)?') -eq 0
+        test $(count_containers 'typo3') -eq 0
         test $(count_volumes 'typo3-root') -eq 1
 
         docker volume rm typo3-root >/dev/null
@@ -52,12 +51,12 @@ for T in $TAGS; do
         echo $'\n*************** '"$TRAVIS_REPO_SLUG:$T with $DB_TYPE"
         t3 run -d $DB_TYPE -t $T
 
-        test $(count_containers 'typo3(-db)?') -eq 2
+        test $(count_containers 'typo3') -eq 1
         test $(count_volumes 'typo3-(root|data)') -eq 2
 
         t3 stop --rm
 
-        test $(count_containers 'typo3(-db)?') -eq 0
+        test $(count_containers 'typo3') -eq 0
         test $(count_volumes 'typo3-(root|data)') -eq 2
 
         docker volume rm typo3-root typo3-data >/dev/null
