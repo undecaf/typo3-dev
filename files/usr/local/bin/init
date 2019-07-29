@@ -13,6 +13,7 @@ RE='^([0-9]+\.){2,}[0-9]+'
 CURRENT_TYPO3_VER=$(jq --raw-output '[.packages|.[]|{(.name): .version}]|add|."typo3/cms-core"' $TYPO3_ROOT/composer.lock 2>/dev/null) \
     && [[ "$CURRENT_TYPO3_VER" =~ $RE ]] && TYPO3_VER=$CURRENT_TYPO3_VER
 echo $'\n*** '"TYPO3 ${TYPO3_VER}, container image: ${IMAGE_VER} (built on $(date --reference ${TYPO3_ROOT} --rfc-2822))"$' ***\n'
+httpd -v
 php --version
 echo
 
@@ -31,30 +32,50 @@ if [ $$ -eq 1 ]; then
 
     # Show locale
     echo "Locale: $LANG"
+
+    # Deactivate Composer Mode if so requested
+    case "${T3_COMPOSER_MODE,,}" in
+        on|yes|1|true)
+            echo "Composer manages TYPO3 extensions"
+            ;;
+
+        off|no|0|false)
+            sed -E \
+                -e "s/define *\( *'TYPO3_COMPOSER_MODE' *, *TRUE *\) *;/define('TYPO3_COMPOSER_MODE', FALSE);/" \
+                -i $TYPO3_ROOT/vendor/typo3/autoload-include.php
+            rm -rf $TYPO3_ROOT/composer.* $APACHE_HOME/.composer
+            echo "TYPO3 plugin manages TYPO3 extensions"
+            ;;
+
+        *)
+            echo "Unknown Composer Mode option: '$T3_COMPOSER_MODE'"
+            exit 1
+            ;;
+    esac
 fi
 
 # Set up developer/XDebug/production mode
-case "$MODE" in
-	dev|DEV)
-		echo "Developer mode"
+case "${MODE,,}" in
+	dev)
+		echo "Apache/TYPO3 in developer mode"
 		MODE=dev
         XDEBUG=
 		;;
 
-    xdebug|XDEBUG)
-		echo "Developer mode with XDebug"
+    xdebug)
+		echo "Apache/TYPO3 in developer mode with XDebug support"
 		MODE=dev
         XDEBUG=y
 		;;
 
-	prod|PROD|'')
-		echo "Production mode"
+	prod|'')
+		echo "Apache/TYPO3 in production mode"
 		MODE=prod
         XDEBUG=
 		;;
 
 	*)
-		echo "Unknown mode: $MODE. Defaulting to production mode"
+		echo "Unknown mode: '$MODE'. Defaulting to production mode"
 		MODE=prod
 		;;
 esac
@@ -113,25 +134,15 @@ fi
 if [ $$ -eq 1 ]; then
     # Show this ahead of the database log
     echo $'Ctrl-C to stop the container\n'
-    trap "echo $'\nContainer stopped'" EXIT
+    trap "echo \$'\nContainer stopped'" EXIT
 
-    case "$T3_DB_TYPE" in
-        mariadb)
-            start_mysql
-            ;;
-
-        postgresql)
-            start_pg
-            ;;
-
-        sqlite|'')
-            ;;
-
-        *)
-            "Unknown database type: '$T3_DB_TYPE'" >&2
-            exit 1
-    esac
+    # Accept abbreviated database types
+    DB_SUCCESS=
+    [[ -n $T3_DB_TYPE && mariadb == ${T3_DB_TYPE,,}* ]] && start_mysql && DB_SUCCESS=1
+    [[ -n $T3_DB_TYPE && postgresql == ${T3_DB_TYPE,,}* ]] && start_pg && DB_SUCCESS=1
+    [[ -z $T3_DB_TYPE || sqlite == ${T3_DB_TYPE,,}* ]] && DB_SUCCESS=1
+    [[ -n $DB_SUCCESS ]] || { echo "Unknown database type: '$T3_DB_TYPE'"; exit 1; }
 fi
 
-# Execute Dockerfile CMD or command line, passing signals from host into container
+# Execute Dockerfile CMD or command line, passing host signals to the exec'd process
 exec "$@"

@@ -9,6 +9,11 @@
 
 . /etc/environment
 
+if [ ! -r $TYPO3_ROOT/composer.json ]; then
+    echo "File $TYPO3_ROOT/composer.json not found; Composer Mode apparently not active" 1>&2
+    exit -1
+fi
+
 RUN_COMPOSER=1
 
 if [ -f $COMPOSER_EXCLUDE_FILE ] && [ -n "$(cat $COMPOSER_EXCLUDE_FILE)" ]; then
@@ -42,4 +47,5 @@ if [ -n "$RUN_COMPOSER" ]; then
         -c ". /etc/environment; /usr/local/bin/composer.phar --working-dir=\$TYPO3_ROOT $*"
 else
     echo "Cannot comply with COMPOSER_EXCLUDE, Composer was not run" 1>&2
+    exit -1
 fi
