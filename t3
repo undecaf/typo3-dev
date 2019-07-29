@@ -788,6 +788,9 @@ done <<< "$(printenv)"
 
 # Database type-specific settings
 T3_DB_TYPE=$(autocomplete "$T3_DB_TYPE" sqlite mariadb postgresql)
+ENV_OPTIONS="$ENV_OPTIONS \
+    --env T3_DB_TYPE=${T3_DB_TYPE:-sqlite}"
+
 case "$T3_DB_TYPE" in
     mariadb)
         DB_CONTAINER_PORT=3306
@@ -806,6 +809,11 @@ case "$T3_DB_TYPE" in
         DB_VOL_OPTION="--volume '$T3_DB_DATA:$DB_DATA'"
         T3_DB_PORT=${T3_DB_PORT:-127.0.0.1:$DB_CONTAINER_PORT}
         DB_PORT_OPTION="--publish $T3_DB_PORT:$DB_CONTAINER_PORT"
+        ENV_OPTIONS="$ENV_OPTIONS \
+            --env T3_DB_NAME=${T3_DB_NAME:-t3} \
+            --env T3_DB_USER=${T3_DB_USER:-t3} \
+            --env T3_DB_PW=${T3_DB_PW:-t3} \
+            --env T3_DB_ROOT_PW=${T3_DB_ROOT_PW:-toor}"
         ;;
 
     sqlite|'')
@@ -819,14 +827,6 @@ case "$T3_DB_TYPE" in
         usage "Unknown database type: '$T3_DB_TYPE'"
         ;;
 esac
-
-# Pass database credentials as environment variables
-ENV_OPTIONS="$ENV_OPTIONS \
-    --env T3_DB_TYPE=${T3_DB_TYPE:-sqlite}
-    --env T3_DB_NAME=${T3_DB_NAME:-t3} \
-    --env T3_DB_USER=${T3_DB_USER:-t3} \
-    --env T3_DB_PW=${T3_DB_PW:-t3} \
-    --env T3_DB_ROOT_PW=${T3_DB_ROOT_PW:-toor}"
 
 
 # --------------------------------------------------------------------------
