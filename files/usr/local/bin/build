@@ -58,17 +58,6 @@ apk add \
 	php7-iconv \
 	php7-openssl
 
-# Set up the runtime environment
-. /etc/environment
-
-# Install Composer
-curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/
-chmod 755 /usr/local/bin/*
-chmod 755 /etc/php7
-
-mkdir -p $APACHE_HOME/.composer
-chown $APACHE_USER: $APACHE_HOME/.composer
-
 # Install PHP modules
 apk add \
     icu-libs \
@@ -117,6 +106,18 @@ apk add \
 	php7-xmlwriter \
 	php7-xsl \
 	php7-zip
+
+# Set up the runtime environment
+. /etc/environment
+
+# Install Composer
+curl -sS https://getcomposer.org/installer | php
+mv composer.phar /usr/local/bin/
+chmod 755 /usr/local/bin/*
+chmod 755 /etc/php7
+
+mkdir -p $APACHE_HOME/.composer
+chown $APACHE_USER: $APACHE_HOME/.composer
 
 # Install TYPO3 version $TYPO3_VER using Composer
 mv $TYPO3_ROOT/composer-${TYPO3_VER}.json $TYPO3_ROOT/composer.json
