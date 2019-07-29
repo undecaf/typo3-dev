@@ -23,8 +23,8 @@
 #
 
 # Constants
-# TODO: T3_IMAGE=docker.io/undecaf/typo3-all-in-one
-T3_IMAGE=localhost/undecaf/typo3-all-in-one
+# TODO: T3_IMAGE=docker.io/undecaf/typo3-in-a-box
+T3_IMAGE=localhost/undecaf/typo3-in-a-box
 T3_ROOTDIR=/var/www/localhost
 MYSQL_DATA=/var/lib/mysql
 PG_DATA=/var/lib/postgresql/data
@@ -271,7 +271,7 @@ Usage:
   $(basename $0) run [option]... [--] [Docker/Podman option]...
   $(basename $0) run [-h|--help]
 
-Runs TYPO3 image 'undecaf/typo3-all-in-one' in a container in Docker or Podman.
+Runs TYPO3 image 'undecaf/typo3-in-a-box' in a container in Docker or Podman.
 
 Although all options are optional, at least one option must be set
 ('--' is sufficient) as a precaution against inadvertent command invocation.
@@ -525,7 +525,7 @@ Usage:
 
 Commands:
 
-  run           Runs TYPO3 image 'undecaf/typo3-all-in-one' in a container in Docker or
+  run           Runs TYPO3 image 'undecaf/typo3-in-a-box' in a container in Docker or
                 Podman.
  
   stop          Stops a running TYPO3 (and the associated database) container.
