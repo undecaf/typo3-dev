@@ -14,6 +14,9 @@ cat >> /etc/apk/repositories <<EOF
 http://dl-cdn.alpinelinux.org/alpine/edge/community
 EOF
 
+apk update
+apk upgrade
+
 # Build locale support, see https://github.com/Auswaschbar/alpine-localized-docker
 export MUSL_LOCPATH="/usr/share/i18n/locales/musl"
 apk --no-cache add libintl
@@ -27,9 +30,7 @@ cd ..
 rm -r musl-locales
 apk del .locale_build
 
-# Install basics
-apk update
-apk upgrade
+# Install the basics
 apk add \
 	bash \
     su-exec \
@@ -42,12 +43,10 @@ apk add \
     rsync \
     jq
 
-# Install PostgreSQL
+# Install databases
 apk add \
-    postgresql \
-    postgresql-contrib \
-    libpq \
-    postgresql-client
+    mariadb \
+    postgresql
 
 # Install Apache and PHP
 apk add \

@@ -7,7 +7,7 @@ ARG TYPO3_VER=9.5
 
 LABEL \
     org.opencontainers.image.title="All-in-one TYPO3 image" \
-	org.opencontainers.image.description="TYPO3, Apache, PHP, Composer, ImageMagick; SQLite, MariaDB and PostgreSQL to choose from" \
+	org.opencontainers.image.description="TYPO3, Apache, PHP, Composer, ImageMagick; SQLite, MariaDB and PostgreSQL databases to choose from" \
 	org.opencontainers.image.version="${IMAGE_VER}" \
 	org.opencontainers.image.revision="${COMMIT}" \
 	org.opencontainers.image.url="https://hub.docker.com/r/undecaf/typo3-dev" \
@@ -19,7 +19,7 @@ LABEL \
 COPY files /
 RUN /usr/local/bin/build
 
-VOLUME /var/www/localhost /var/lib/postgresql/data
+VOLUME /var/www/localhost /var/lib/mysql /var/lib/postgresql/data
 
 EXPOSE 80 3306 5432
 
