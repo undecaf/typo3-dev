@@ -1,8 +1,8 @@
-# Containerized TYPO3 – from quick start to extension development 
+# TODO: TYPO3 in a box – from quick start to extension development 
 
-[![Build Status](https://travis-ci.com/undecaf/typo3-dev.svg?branch=master)](https://travis-ci.com/undecaf/typo3-dev)
-[![Latest release](https://img.shields.io/github/release/undecaf/typo3-dev.svg)](https://github.com/undecaf/typo3-dev)
-![Image Size](https://img.shields.io/microbadger/image-size/undecaf/typo3-dev/latest.svg)
+[![Build Status](https://travis-ci.com/undecaf/typo3-in-a-box.svg?branch=master)](https://travis-ci.com/undecaf/typo3-in-a-box)
+[![Latest release](https://img.shields.io/github/release/undecaf/typo3-in-a-box.svg)](https://github.com/undecaf/typo3-in-a-box)
+![Image Size](https://img.shields.io/microbadger/image-size/undecaf/typo3-in-a-box/latest.svg)
 
 This project provides a containerized TYPO3 installation equivalent to
 [`composer require typo3/cms`](https://packagist.org/packages/typo3/cms) with
@@ -30,7 +30,7 @@ File access rights, ownerships, UIDs and GIDs are transparently and consistently
 
 ## What you get
 
-![Parts of this project in a block diagram: containers for TYPO3 and database, browser and IDE](https://undecaf.github.io/typo3-dev/img/overview.png)
+![Parts of this project in a block diagram: containers for TYPO3 and database, browser and IDE](https://undecaf.github.io/typo3-in-a-box/img/overview.png)
 
 ## Contents
 
@@ -71,7 +71,7 @@ To start a TYPO3 instance in a standalone container, enter this command:
 $ docker run \
     --volume typo3-root:/var/www/localhost \
     --publish 127.0.0.1:8080:80 \
-    undecaf/typo3-dev
+    undecaf/typo3-in-a-box
 ```
 
 If you prefer
@@ -98,10 +98,10 @@ More complex setups (such as using an external database) require complex Docker
 or Podman command lines.
 
 In order to simplify usage, the
-[`t3` shell script](https://raw.githubusercontent.com/undecaf/typo3-dev/master/t3)
+[`t3` shell script](https://raw.githubusercontent.com/undecaf/typo3-in-a-box/master/t3)
 has been provided for Linux and macOS.
 This script is
-[avaliable for download here](https://raw.githubusercontent.com/undecaf/typo3-dev/master/t3).
+[avaliable for download here](https://raw.githubusercontent.com/undecaf/typo3-in-a-box/master/t3).
  It lets you:
 -   configure and run a TYPO3 container plus an optional database container;
 -   stop these containers and optionally remove them;
@@ -423,7 +423,7 @@ $ t3 COMMAND [option]...
 ```
 
 The `t3` script is
-[avaliable for download here](https://raw.githubusercontent.com/undecaf/typo3-dev/master/t3).
+[avaliable for download here](https://raw.githubusercontent.com/undecaf/typo3-in-a-box/master/t3).
 In order to view the version of this document that matches a running TYPO3 instance, 
 point your browser to e.g. `http://localhost:8080/readme.html`.
 
@@ -471,9 +471,9 @@ TYPO3 container name by appending `-db`.
 
 __TYPO3:__
 by default, the latest image built for the most recent TYPO3 version is pulled
-from [`docker.io/undecaf/typo3-dev`](https://hub.docker.com/r/undecaf/typo3-dev).
+from [`docker.io/undecaf/typo3-in-a-box`](https://hub.docker.com/r/undecaf/typo3-in-a-box).
 Option `-t` (or `T3_TAG`) selects a particular TYPO3 version and build by one of the
-[available tags](https://hub.docker.com/r/undecaf/typo3-dev/tags).
+[available tags](https://hub.docker.com/r/undecaf/typo3-in-a-box/tags).
 
 TYPO3 is served at `127.0.0.1:8080` by default. Option `-p` (or `T3_PORT`) lets
 you choose a different host interface and/or port.
@@ -599,7 +599,10 @@ Initial values can be assigned by command [`t3 run`](#t3-run).
 
 ### `t3 composer`
 
-Executes a [Composer](https://getcomposer.org/) command inside of a running
+This command is applicable only in
+[Composer Mode](https://getcomposer.org/#Composer_Mode) (see option [`--composer-mode`](#options)
+and host environment variable [`T3_COMPOSER_MODE`](#host-environment-variables)).
+It executes a [Composer](https://getcomposer.org/) command inside a running
 TYPO3 container:
 
 ```bash
@@ -619,9 +622,9 @@ Composer is run in the context of the TYPO3 installation root in the container
 (`/var/www/localhost`), i.e. the root of the TYPO3 volume.
 
 In order to keep Composer from overwriting changes you made in your working
-directory, set the 
-[container environment variable](#container-environment-variables) 
-`COMPOSER_EXCLUDE` to a colon-separated list of _subdirectories_ of 
+directory, set the container environment variable
+[`COMPOSER_EXCLUDE`](#container-environment-variables)
+to a colon-separated list of _subdirectories_ of 
 `/var/www/localhost` which are to be excluded from changes made by Composer.
 
 
@@ -683,10 +686,11 @@ that environment variable is not set.
 | `-h`<br>`--help` | none<br>all | Displays a list of commands, or help for the specified command. |
 | `--name=NAME`<br>`-n NAME` | `run`<br>`stop`<br>`composer`<br>`env` | Container name. The database container name, if any, has `-db` appended to this name.<br>Default: `$T3_NAME`, or `typo3`. |
 | `--hostname=HOSTNAME`<br>`-h HOSTNAME` | `run` | Hostname assigned to the TYPO3 container and to Apache `ServerName` and `ServerAdmin`.<br>Default: `$T3_HOSTNAME`, or `typo3.$(hostname)`. |
-| `--tag=TAG`<br>`-t TAG` | `run` | Tag of image to run, consisting of TYPO3 version and build version, e.g. `8.7-1.3` or `9.5-latest`.<br> Default: `$T3_TAG`, or `latest`, i.e. the latest build for the most recent TYPO3 version. |
+| `--tag=TAG`<br>`-t TAG` | `run` | Tag of image to run, consisting of TYPO3 version and build version, e.g. `8.7-1.3` or `9.5-latest`.<br>Default: `$T3_TAG`, or `latest`, i.e. the latest build for the most recent TYPO3 version. |
+| `--composer-mode=ON/OFF`<br>`-c ON/OFF` | `run` | If [Composer Mode](https://getcomposer.org/#Composer_Mode) is `on` then [Composer](#t3-composer) is responsible for installing/removing TYPO3 extensions. If set to `off` then this is handled by the TYPO3 Extension Manager.<br>Default: `$T3_COMPOSER_MODE`, or `off`. |
 | `--typo3-root=VOLUME`<br>`-v VOLUME` | `run` | Either a volume name to be mapped to the TYPO3 root directory inside the container, or a working directory path (containing a `/`).<br>In the latter case, the directory basename is used as the volume name, and the directory is bind-mounted at that volume. Thus, volume content appears to be owned by the current user.<br>__Podman users please note:__ working directories require at least Podman&nbsp;v1.4.3.<br>Default: `$T3_ROOT`, or `typo3-root`. |
 | `--typo3-port=PORT`<br>`-p PORT` | `run` | Host interface (optional) and port where to publish the TYPO3 HTTP port.<br>Default: `$T3_PORT`, or `127.0.0.1:8080`. |
-| `--db-type=TYPE`<br>`-d TYPE` | `run`| Type of database container: `mariadb` for MariaDB or `postgresql` for PostgreSQL (can be abbreviated). If empty then the SQLite instance of the TYPO3 container will be used.<br>Default: `$T3_DB_TYPE`, or empty. |
+| `--db-type=TYPE`<br>`-d TYPE` | `run`| Type of database to use: `sqlite` or empty for SQLite, `mariadb` for MariaDB or `postgresql` for PostgreSQL (can be abbreviated).<br>Default: `$T3_DB_TYPE`, or `sqlite`. |
 | `--db-vol=VOLUME`<br>`-V VOLUME` | `run` | Database volume name; requires option `--db-type`.<br>Defaults: `$T3_DB_DATA`, or `typo3-data`. |
 | `--db-port=PORT`<br>`-P PORT` | `run` | Host interface (optional) and port where to publish the database port; requires option `--db-type`.<br> Defaults: `$T3_DB_PORT`, or `127.0.0.1:3306` for MariaDB and `127.0.0.1:5432` for PostgreSQL. |
 | `--rm` | `run`<br>`stop` | Causes the TYPO3 container and the respective database container (if one exists) to be removed after they were stopped. |
@@ -709,16 +713,17 @@ thus establishing a consistent environment for all `t3` commands.
 | `T3_NAME` | Container name. The database container name, if any, has `-mariadb` or `-postgresql` appended to this name. | `typo3` |
 | `T3_HOSTNAME` | Hostname assigned to the TYPO3 container and to Apache `ServerName` and `ServerAdmin`. | `typo3.$(hostname)` |
 | `T3_TAG` | Tag of image to run, consisting of TYPO3 version and build version, e.g. `8.7-1.3` or `9.5-latest`. | `latest` |
+| `T3_COMPOSER_MODE` | TODO - Composer Mode | `off` |
 | `T3_ROOT` | Volume name to be mapped to the TYPO3 root directory inside the container.<br>If an absolute directory path specified then its basename is used as the volume name; in addition, that directory is bind-mounted at the volume so that files and directories in that volume  appear to be owned by the current user. | `typo3-root` |
 | `T3_PORT` | Interface (optional) and port where to publish the TYPO3 HTTP port. | `127.0.0.1:8080` |
-| `T3_DB_TYPE` | Type of database container: `mariadb` for MariaDB or `postgresql` for PostgreSQL (can be abbreviated). If empty then the SQLite instance of the TYPO3 container will be used. | empty |
-| `T3_DB_DATA`| Database volume name; effective only if `T3_DB_TYPE` or `--db-type` is set. | `typo3-data` |
-| `T3_DB_PORT` | Host interface (optional) and port where to publish the database port; effective only if `T3_DB_TYPE` or `--db-type` is set. | `127.0.0.1:3306`, or<br>`127.0.0.1:5432` |
-| `T3_DB_NAME` | Name of the TYPO3 database that is created automatically by `t3 run`. | `t3` |
-| `T3_DB_USER` | Name of the TYPO3 database owner. | `t3` |
-| `T3_DB_PW` | Password of the TYPO3 database. | `t3` |
-| `T3_DB_ROOT_PW` | Password of the MariaDB root user. | `toor` |
-| `T3_TIMEZONE`<br>`T3_MODE`<br>`T3_COMPOSER_EXCLUDE`<br>`T3_PHP_...`<br>`T3_php_...` | Initial values for [container environment variables](#container-environment-variables) `TIMEZONE`, `MODE`, `COMPOSER_EXCLUDE`, `PHP_...` and `php_...`. | empty |
+| `T3_DB_TYPE` | Type of database to use: `sqlite` or empty for SQLite, `mariadb` for MariaDB or `postgresql` for PostgreSQL (can be abbreviated). | `sqlite` |
+| `T3_DB_DATA`| Database volume name; effective only for MariaDB and PostgreSQL. | `typo3-data` |
+| `T3_DB_PORT` | Host interface (optional) and port where to publish the database port; effective only for MariaDB and PostgreSQL. | `127.0.0.1:3306`, or<br>`127.0.0.1:5432` |
+| `T3_DB_NAME` | Name of the TYPO3 database that is created automatically by `t3 run`; effective only for MariaDB and PostgreSQL. | `t3` |
+| `T3_DB_USER` | Name of the TYPO3 database owner; effective only for MariaDB and PostgreSQL. | `t3` |
+| `T3_DB_PW` | Password of the TYPO3 database; effective only for MariaDB and PostgreSQL. | `t3` |
+| `T3_DB_ROOT_PW` | Password of the MariaDB root user; effective only for MariaDB and PostgreSQL. | `toor` |
+| `T3_TIMEZONE`<br>`T3_LANG`<br>`T3_MODE`<br>`T3_COMPOSER_EXCLUDE`<br>`T3_PHP_...`<br>`T3_php_...` | Initial values for [container environment variables](#container-environment-variables) `TIMEZONE`, `LANG`, `MODE`, `COMPOSER_EXCLUDE`, `PHP_...` and `php_...`. | empty |
 
 
 
@@ -728,12 +733,13 @@ These variables can get their initial values from
 [host environment variables](#host-environment-variables) or 
 from the `t3 run --env` option; the `--env` option takes precedence.
 
-Except for `TIMEZONE`, these variables can be set or changed at runtime by
+Except for `TIMEZONE` and `LANG`, these variables can be set or changed at runtime by
 the `t3 env` command.
 
 | Name | Description | Built-in default |
 |------|-------------|------------------|
 | `TIMEZONE` | Sets the TYPO3 container timezone (e.g. `Europe/Vienna`). |Timezone of your current location, or else UTC. |
+| `LANG` | TODO - usually part of the existing environment. | `C.UTF-8` |
 | `MODE`| <dl><dt>`prod`</dt><dd>selects production mode: TYPO3 operating in „Production Mode“, no Apache/PHP signature headers, PHP settings as per     [`php.ini-production`](https://github.com/php/php-src/blob/master/php.ini-production)</dd><dt>`dev`</dt><dd>selects development mode: TYPO3 in „Development Mode“, verbose Apache/PHP signature headers, PHP settings as recommended by [`php.ini-development`](https://github.com/php/php-src/blob/master/php.ini-development)</dd><dt>`xdebug`</dt><dd>selects development mode as above and also enables [XDebug](https://xdebug.org/)</dd></dl> | `prod` |
 | `COMPOSER_EXCLUDE` | Colon-separated list of _subdirectories_ of `/var/www/localhost` which are to be excluded from the effects of [Composer operations](#composer).<br>This is intended e.g. to protect the current version of an extension you are developing from being overwritten by an older version stored in a repository.<br>These directories need to exist only by the time Composer is invoked. | empty |
 | `PHP_...`<br>`php_...` | Environment variables prefixed with `PHP_` or `php_` become `php.ini` settings with the prefix removed, e.g. `--env php_post_max_size=5M` becomes `post_max_size=5M`. These settings override prior settings and `MODE`. | none |
