@@ -1,3 +1,5 @@
+## :warning: This repository is no longer being maintained and has been archived.
+
 # Containerized TYPO3 – from quick start to extension development 
 
 [![Build Status](https://travis-ci.com/undecaf/typo3-dev.svg?branch=master)](https://travis-ci.com/undecaf/typo3-dev)
